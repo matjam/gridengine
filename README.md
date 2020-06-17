@@ -10,6 +10,8 @@ The end desire is that in the process of writing my game, that I will develop a 
 
 I hope it's useful.
 
+![gridengine.png](gridengine.png?raw=true "GridEngine")
+
 # Features
 
 - ConsoleScreen: fixed width PCF unicode font support for bitmap character mode rendered console screen. Tested with 8x8 and 8x16 fonts - but you'll need to probably do some modifications to make it work properly.
