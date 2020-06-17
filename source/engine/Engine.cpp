@@ -55,8 +55,7 @@ void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScre
                     const std::string &title)
 {
     SPDLOG_INFO("creating engine");
-    // initialize global file cache
-    file_cache   = std::make_unique<FileCache>();
+
     m_video_mode = video_mode;
 
     sf::ContextSettings settings;
@@ -104,7 +103,12 @@ void Engine::start()
 
     uint32_t border = 3;
 
+    // Used to calculate FPS.
     Stats::begin("frame_time");
+
+    // time it takes to draw a frame minus the time it takes to display it; it's often the case that vsync is on so
+    // knowing the frames per second is often less useful than knowing what time it took to do everything up to flipping
+    // the buffer.
     Stats::begin("render_time");
     while (m_window->isOpen()) {
         sf::Event event;
@@ -112,6 +116,12 @@ void Engine::start()
             m_state_stack->ProcessEvent(event);
         }
 
+        // execute per frame game logic if any.
+        Stats::begin("update_time");
+        update();
+        Stats::end("update_time");
+
+        // render the things.
         renderDebugScreen();
         render();
 
@@ -167,6 +177,10 @@ void Engine::render()
 {
     m_screen->update();
     m_window->draw(*m_screen);
+}
+
+void Engine::update()
+{
 }
 
 void Engine::addDefaultHandlers()

@@ -83,6 +83,7 @@ class ConsoleScreen : public Drawable
     const void write(const sf::Vector2i location, const std::string text, const uint32_t max_width, const uint32_t fg);
     const void write(const sf::Vector2i location, const std::string text, const uint32_t max_width);
     const void write(const sf::Vector2i location, const std::string text);
+    const void write(const uint32_t x, uint32_t y, const std::string text);
 
     const void writeCenter(const sf::IntRect, const std::string);
 

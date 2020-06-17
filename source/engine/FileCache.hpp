@@ -40,17 +40,14 @@ namespace Engine
 
 class FileCache
 {
-  private:
-    std::mutex file_cache_mutex;
-    std::map<std::string, std::shared_ptr<std::vector<char>>> file_cache;
-
   public:
-    FileCache()  = default;
-    ~FileCache() = default;
-    void Clear();
-    auto Get(const std::filesystem::path &path) -> std::shared_ptr<std::vector<char>>;
-};
+    FileCache() = delete; // only intended to be used as a static class.
+    static void Clear();
+    static const std::shared_ptr<std::vector<char>> Get(const std::filesystem::path &path);
 
-extern std::unique_ptr<FileCache> file_cache;
+  private:
+    static std::mutex m_file_cache_mutex;
+    static std::map<std::string, std::shared_ptr<std::vector<char>>> m_file_cache;
+};
 
 } // namespace Engine

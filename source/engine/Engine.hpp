@@ -56,7 +56,8 @@ class Engine
     ScriptEngine &scriptEngine();
 
   protected:
-    virtual void render();
+    virtual void render(); // implemented by derived classes for custom rendering.
+    virtual void update(); // implemented by derived classes to implement any logic.
 
   private:
     void addDefaultHandlers();

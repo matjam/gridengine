@@ -175,9 +175,11 @@ const void ConsoleScreen::write(const sf::Vector2i location, const std::string t
 
     uint32_t offset = 0;
     for (auto &c : str) {
-        if (offset == max_width) {
+        if (offset == max_width)
             break;
-        }
+
+        if (location.x + offset >= m_width)
+            break;
 
         poke(sf::Vector2i(location.x + offset, location.y), c, fg, bg);
         offset++;
@@ -206,6 +208,11 @@ const void ConsoleScreen::write(const sf::Vector2i location, const std::string t
     write(location, text, max_width, m_current_fg, m_current_bg);
 }
 
+const void ConsoleScreen::write(const uint32_t x, uint32_t y, const std::string text)
+{
+    write(sf::Vector2i(x, y), text);
+}
+
 const void ConsoleScreen::writeCenter(const sf::IntRect bounds, const std::string text)
 {
     auto offset = (bounds.width - text.length()) / 2;
@@ -216,6 +223,9 @@ const void ConsoleScreen::writeCenter(const sf::IntRect bounds, const std::strin
 inline void ConsoleScreen::poke(const sf::Vector2i location, const char32_t character, const uint32_t fg,
                                 const uint32_t bg)
 {
+    if (location.x > m_width || location.y > m_height)
+        return;
+
     const auto offset       = location.x + location.y * m_width;
     m_console[offset]       = character;
     m_console_fg[offset]    = fg;
@@ -474,7 +484,7 @@ inline sf::Vector2f ConsoleScreen::getAtlasCoordsForOffset(const uint32_t &offse
 
 void ConsoleScreen::loadFont(const std::string font_file, uint32_t pixel_size)
 {
-    auto font_data = file_cache->Get(font_file);
+    auto font_data = FileCache::Get(font_file);
 
     auto error = FT_Init_FreeType(&m_library);
     if (error != FT_Err_Ok) {
