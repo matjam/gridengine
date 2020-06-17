@@ -43,6 +43,7 @@ I use CMake to try to simplify things; the project should build on Windows, Linu
 Generally speaking, you can build with
 
 ```
+git submodule update --init --recursive
 mkdir build
 cd build
 cmake ..
@@ -57,7 +58,7 @@ You need to install vcpkg somewhere; if you want this cmake build to just work, 
 
 You need at least the following:
 
-- lua
+- lua (used by sol2 pulled in from submodules)
 - sfml
 - spdlog
 - freetype
