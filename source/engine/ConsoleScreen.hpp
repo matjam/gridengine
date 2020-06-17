@@ -38,7 +38,7 @@
 
 #include "Drawable.hpp"
 
-namespace Engine
+namespace ge
 {
 
 struct FontInfo {
@@ -91,6 +91,7 @@ class ConsoleScreen : public Drawable
 
     // single character access at a location
     inline void poke(const sf::Vector2i location, const char32_t character, const uint32_t fg, const uint32_t bg);
+    inline void poke(uint32_t, uint32_t, const char32_t character, const uint32_t fg, const uint32_t bg);
 
     inline const std::tuple<const char32_t, const uint32_t, const uint32_t> peek(const sf::Vector2i location);
 
@@ -160,4 +161,4 @@ class ConsoleScreen : public Drawable
     std::map<char32_t, uint32_t> m_console_atlas_offset; // a map of the charcode to a given atlas offset.
 };
 
-} // namespace Engine
+} // namespace ge

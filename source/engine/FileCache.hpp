@@ -35,7 +35,7 @@
 
 #include <spdlog/spdlog.h>
 
-namespace Engine
+namespace ge
 {
 
 class FileCache
@@ -50,4 +50,4 @@ class FileCache
     static std::map<std::string, std::shared_ptr<std::vector<char>>> m_file_cache;
 };
 
-} // namespace Engine
+} // namespace ge

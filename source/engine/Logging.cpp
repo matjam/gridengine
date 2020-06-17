@@ -24,7 +24,7 @@
 
 #include "Logging.hpp"
 
-namespace Engine
+namespace ge
 {
 
 std::shared_ptr<spdlog::logger> console;

@@ -27,7 +27,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 
-namespace Engine
+namespace ge
 {
 
 class Drawable : public sf::Drawable, public sf::Transformable
@@ -44,4 +44,4 @@ class Drawable : public sf::Drawable, public sf::Transformable
     bool should_delete;
 };
 
-} // namespace Engine
+} // namespace ge

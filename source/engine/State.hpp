@@ -33,7 +33,7 @@
 #include <spdlog/spdlog.h>
 #include <SFML/Window.hpp>
 
-namespace Engine
+namespace ge
 {
 
 typedef std::function<void(const sf::Event &)> event_handler_func;
@@ -52,4 +52,4 @@ class State
     std::map<int, std::unique_ptr<std::deque<event_handler_func>>> event_handlers_;
 };
 
-} // namespace Engine
+} // namespace ge

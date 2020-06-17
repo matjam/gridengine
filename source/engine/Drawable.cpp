@@ -24,7 +24,7 @@
 
 #include "Drawable.hpp"
 
-namespace Engine
+namespace ge
 {
 
 bool Drawable::isVisible()
@@ -47,4 +47,4 @@ void Drawable::setShouldDelete(bool _should_delete)
     should_delete = _should_delete;
 }
 
-} // namespace Engine
+} // namespace ge

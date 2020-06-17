@@ -24,7 +24,7 @@
 
 #include "FileCache.hpp"
 
-namespace Engine
+namespace ge
 {
 
 std::mutex FileCache::m_file_cache_mutex;
@@ -71,4 +71,4 @@ const std::shared_ptr<std::vector<char>> FileCache::Get(const std::filesystem::p
     return buffer;
 }
 
-} // namespace Engine
+} // namespace ge

@@ -24,7 +24,7 @@
 
 #include "Stats.hpp"
 
-namespace Engine
+namespace ge
 {
 
 uint64_t Stats::m_slice_max;
@@ -69,4 +69,4 @@ uint64_t Stats::getAverageTime(std::string name)
     return total / count;
 }
 
-} // namespace Engine
+} // namespace ge

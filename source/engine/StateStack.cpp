@@ -24,7 +24,7 @@
 
 #include "StateStack.hpp"
 
-namespace Engine
+namespace ge
 {
 
 StateStack::StateStack()
@@ -51,4 +51,4 @@ void StateStack::ProcessEvent(sf::Event &event)
     state_stack.top()->ProcessEvent(event);
 }
 
-} // namespace Engine
+} // namespace ge

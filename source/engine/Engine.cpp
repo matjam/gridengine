@@ -25,6 +25,7 @@
 #include "Engine.hpp"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/rotating_file_sink.h>
 
 #include <memory>
 #include <random>
@@ -37,13 +38,20 @@
 #include "State.hpp"
 #include "Stats.hpp"
 
-namespace Engine
+namespace ge
 {
 
 Engine::Engine()
 {
-    console = spdlog::stdout_color_mt("console");
+    std::vector<spdlog::sink_ptr> sinks;
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+    sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>("gridrunner.log", 1000000, 5, true));
+    console = std::make_shared<spdlog::logger>("console", begin(sinks), end(sinks));
+
+    // should probably put this in the Logging class.
+
     spdlog::set_default_logger(console);
+
     Stats::setMaxSlices(30);
 }
 
@@ -273,4 +281,4 @@ void Engine::keyEventHandler(const sf::Event &event)
     }
 }
 
-} // namespace Engine
+} // namespace ge

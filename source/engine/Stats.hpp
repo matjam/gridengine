@@ -28,7 +28,7 @@
 #include <deque>
 #include <map>
 
-namespace Engine
+namespace ge
 {
 
 class Stats
@@ -45,4 +45,4 @@ class Stats
     static std::map<std::string, sf::Clock> m_active_timers;
 };
 
-} // namespace Engine
+} // namespace ge

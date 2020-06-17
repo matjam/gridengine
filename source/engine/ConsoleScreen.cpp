@@ -32,7 +32,7 @@
 
 #include "FileCache.hpp"
 
-namespace Engine
+namespace ge
 {
 
 ConsoleScreen::ConsoleScreen()
@@ -231,6 +231,12 @@ inline void ConsoleScreen::poke(const sf::Vector2i location, const char32_t char
     m_console_fg[offset]    = fg;
     m_console_bg[offset]    = bg;
     m_console_dirty[offset] = true;
+}
+
+inline void ConsoleScreen::poke(const uint32_t x, uint32_t y, const char32_t character, const uint32_t fg,
+                                const uint32_t bg)
+{
+    poke(sf::Vector2i(x, y), character, fg, bg);
 }
 
 inline const std::tuple<const char32_t, const uint32_t, const uint32_t> ConsoleScreen::peek(const sf::Vector2i location)
@@ -544,4 +550,4 @@ const void ConsoleScreen::loading()
     }
 }
 
-} // namespace Engine
+} // namespace ge

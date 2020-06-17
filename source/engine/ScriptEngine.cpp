@@ -30,7 +30,7 @@
 #include "Logging.hpp"
 #include <spdlog/spdlog.h>
 
-namespace Engine
+namespace ge
 {
 ScriptEngine::ScriptEngine()
 {
@@ -56,4 +56,4 @@ void ScriptEngine::luaLogInfo(std::string message)
 void ScriptEngine::getEngineConfiguration()
 {
 }
-} // namespace Engine
+} // namespace ge

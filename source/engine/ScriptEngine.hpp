@@ -30,7 +30,7 @@
 
 #include "Logging.hpp"
 
-namespace Engine
+namespace ge
 {
 class ScriptEngine
 {
@@ -45,4 +45,4 @@ class ScriptEngine
     std::map<std::string, sol::load_result> scripts;
 };
 
-} // namespace Engine
+} // namespace ge

@@ -27,7 +27,7 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 
-namespace Engine
+namespace ge
 {
 
 extern std::shared_ptr<spdlog::logger> console;

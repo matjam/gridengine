@@ -24,7 +24,7 @@
 
 #include "State.hpp"
 
-namespace Engine
+namespace ge
 {
 
 void State::SetName(const std::string &name)
@@ -65,4 +65,4 @@ void State::AddHandler(sf::Event::EventType event_type, const event_handler_func
     event_handlers_[type]->push_back(func);
 }
 
-} // namespace Engine
+} // namespace ge

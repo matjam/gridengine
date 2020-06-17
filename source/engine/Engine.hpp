@@ -37,7 +37,7 @@
 #include "State.hpp"
 #include "StateStack.hpp"
 
-namespace Engine
+namespace ge
 {
 
 class Engine
@@ -82,4 +82,4 @@ class Engine
     std::shared_ptr<State> m_state;
 };
 
-} // namespace Engine
+} // namespace ge
