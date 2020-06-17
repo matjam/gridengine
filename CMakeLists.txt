@@ -51,7 +51,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 # spdlog uses fmt, but I also want to use fmt.
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
-file(GLOB gridengine_sources source/*.cpp source/engine/*.cpp)
+file(GLOB gridengine_sources source/game/*.cpp source/engine/*.cpp)
 
 include_directories(external/sol2/single/include)
 
