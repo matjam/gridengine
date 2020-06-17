@@ -80,6 +80,15 @@ Obviously, you'll need X Code and all it provides, and you'll need to install th
 
 Tested with clang10. You will need some system packages for the vcpkgs to install; they will complain when you try to add them, then you add them.
 
+## Running
+
+You need to start the game in the root of the project as it expects to find files in `data/`. Once running you can hit the following keys
+
+- F1 - brings up the debug menu with some stats
+- F2 - shows a map of all the characters loaded from the font. Yep, all of them.
+- F3 - smashes the screen with random colors/characters.
+- F4 - does an old style loading screen.
+
 # Developing with it
 
 I've tried to separate things out so you can implement stuff in the main source folder. What I suggest you do though is just make this project an external git submodule of your project, then you can separate your code out and use what I provide as a skeleton.

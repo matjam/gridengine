@@ -26,9 +26,9 @@ else()
     message( FATAL_ERROR "Unsupported platform." )
 endif()
 
-project(gridrunner
+project(gridengine
     VERSION 0.1
-    DESCRIPTION "gridrunner"
+    DESCRIPTION "gridengine"
     LANGUAGES CXX)
 
 # Set version information
@@ -51,7 +51,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 # spdlog uses fmt, but I also want to use fmt.
 add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
-file(GLOB gridrunner_sources source/*.cpp source/engine/*.cpp)
+file(GLOB gridengine_sources source/*.cpp source/engine/*.cpp)
 
 include_directories(external/sol2/single/include)
 
@@ -70,41 +70,41 @@ if(APPLE)
 	find_library(FOUNDATION_LIBRARY Foundation)
 	list(APPEND PROJECT_LIBRARIES ${FOUNDATION_LIBRARY})
     include_directories(source/osx)
-    add_executable(gridrunner MACOSX_BUNDLE source/osx/resourcePath.mm ${gridrunner_sources} ${RESOURCE_DATA} ${RESOURCE_SCRIPTS})
+    add_executable(gridengine MACOSX_BUNDLE source/osx/resourcePath.mm ${gridengine_sources} ${RESOURCE_DATA} ${RESOURCE_SCRIPTS})
     set_source_files_properties(${RESOURCE_DATA} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/data)
     set_source_files_properties(${RESOURCE_SCRIPTS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/data/scripts)
 else()
-    add_executable(gridrunner ${gridrunner_sources})
+    add_executable(gridengine ${gridengine_sources})
 endif()
 
-set_property(TARGET gridrunner PROPERTY CXX_STANDARD 17)
-set_property(TARGET gridrunner PROPERTY C_STANDARD 11)
+set_property(TARGET gridengine PROPERTY CXX_STANDARD 17)
+set_property(TARGET gridengine PROPERTY C_STANDARD 11)
 
-target_sources(gridrunner PRIVATE ${gridrunner_sources})
+target_sources(gridengine PRIVATE ${gridengine_sources})
 
-target_include_directories(gridrunner PRIVATE gridrunner-engine/source)
-target_include_directories(gridrunner PRIVATE external/SelbaWard/src)
-target_include_directories(gridrunner PRIVATE ${FREETYPE_INCLUDE_DIRS})
+target_include_directories(gridengine PRIVATE engine/source)
+target_include_directories(gridengine PRIVATE external/SelbaWard/src)
+target_include_directories(gridengine PRIVATE ${FREETYPE_INCLUDE_DIRS})
 
-target_link_libraries(gridrunner PRIVATE ${FREETYPE_LIBRARIES})
-target_link_libraries(gridrunner PRIVATE sfml-window sfml-system sfml-graphics sfml-audio)
-target_link_libraries(gridrunner PRIVATE spdlog::spdlog)
-target_link_libraries(gridrunner PRIVATE fmt::fmt)
-target_link_libraries(gridrunner PRIVATE Boost::filesystem)
-target_link_libraries(gridrunner PRIVATE FLAC OpenAL OpenGL)
-target_link_libraries(gridrunner PRIVATE ${LUA_LIBRARIES})
-# target_link_libraries(gridrunner PRIVATE selbaward)
+target_link_libraries(gridengine PRIVATE ${FREETYPE_LIBRARIES})
+target_link_libraries(gridengine PRIVATE sfml-window sfml-system sfml-graphics sfml-audio)
+target_link_libraries(gridengine PRIVATE spdlog::spdlog)
+target_link_libraries(gridengine PRIVATE fmt::fmt)
+target_link_libraries(gridengine PRIVATE Boost::filesystem)
+target_link_libraries(gridengine PRIVATE FLAC OpenAL OpenGL)
+target_link_libraries(gridengine PRIVATE ${LUA_LIBRARIES})
+# target_link_libraries(gridengine PRIVATE selbaward)
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries(gridrunner PRIVATE X11 dl UDev GL)
+    target_link_libraries(gridengine PRIVATE X11 dl UDev GL)
 endif()
 
 if(APPLE)
-    set_target_properties(gridrunner PROPERTIES MACOSX_BUNDLE TRUE)
-    set_target_properties(gridrunner PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/source/osx/Info.plist)
+    set_target_properties(gridengine PROPERTIES MACOSX_BUNDLE TRUE)
+    set_target_properties(gridengine PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/source/osx/Info.plist)
         
 	# Copy the assets and levels into the bundle
-	set(BUNDLE_PATH ${CMAKE_CURRENT_BINARY_DIR}/gridrunner.app)
+	set(BUNDLE_PATH ${CMAKE_CURRENT_BINARY_DIR}/gridengine.app)
 
 	install(CODE "
 		include(BundleUtilities)
@@ -113,4 +113,4 @@ if(APPLE)
 	)
 endif()
 
-# cotire(gridrunner)
+# cotire(gridengine)

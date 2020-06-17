@@ -37,7 +37,7 @@
 
 int main()
 {
-    SPDLOG_INFO("starting gridrunner");
+    SPDLOG_INFO("starting gridengine");
 
 #ifdef __APPLE__
     SPDLOG_INFO("running on mac OS X, resource path: {}", resourcePath());
@@ -47,7 +47,7 @@ int main()
 #endif
 
     auto engine = std::make_unique<gr::Game>();
-    engine->create(sf::VideoMode(1920, 1080, 32), std::make_unique<gr::GameScreen>(), "GridRunner");
+    engine->create(sf::VideoMode(1920, 1080, 32), std::make_unique<gr::GameScreen>(), "GridEngine");
     engine->start();
 
     return EXIT_SUCCESS;
