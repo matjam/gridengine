@@ -49,9 +49,6 @@ const void ConsoleScreen::create(uint32_t width, uint32_t height, std::string fo
     m_character_height = font_height;
     m_character_width  = font_width;
 
-    auto texture_width  = width * m_character_width;
-    auto texture_height = height * m_character_height;
-
     m_console_bg_vertex_buffer = sf::VertexBuffer(sf::Quads, sf::VertexBuffer::Usage::Stream);
     m_console_fg_vertex_buffer = sf::VertexBuffer(sf::Quads, sf::VertexBuffer::Usage::Stream);
 
@@ -420,8 +417,6 @@ const void ConsoleScreen::update()
 
                 for (uint32_t offset_y = 0; offset_y < m_character_height; offset_y++) {
                     for (uint32_t offset_x = 0; offset_x < m_character_width; offset_x++) {
-                        uint32_t pixel_offset = 4 * offset_x + offset_y * m_character_width;
-
                         // if the pixel is set then write the color as white. We will apply
                         // color to the vertex.
                         if (bitmap[offset_x + offset_y * m_character_width] == 255) {

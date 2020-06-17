@@ -24,8 +24,8 @@
 
 #include "Engine.hpp"
 
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <memory>
 #include <random>
@@ -53,10 +53,6 @@ Engine::Engine()
     spdlog::set_default_logger(console);
 
     Stats::setMaxSlices(30);
-}
-
-Engine::~Engine()
-{
 }
 
 void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScreen> console_screen,
@@ -108,8 +104,6 @@ void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScre
 void Engine::start()
 {
     SPDLOG_INFO("starting engine loop");
-
-    uint32_t border = 3;
 
     // Used to calculate FPS.
     Stats::begin("frame_time");

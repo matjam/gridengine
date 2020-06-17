@@ -24,8 +24,8 @@
 
 #include <set>
 
-#include "MapGenerator.hpp"
 #include "Logging.hpp"
+#include "MapGenerator.hpp"
 
 namespace ge
 {
@@ -226,8 +226,6 @@ bool MapGenerator::mazeHunt(sf::Vector2i *location)
         // grab the first row and process it
         auto y = incomplete_rows.back();
         int x;
-
-        bool found_hall = false;
 
         for (x = 0; x < config.width; x += 2) {
             auto t = tile_map->getTile(sf::Vector2i{x, y});

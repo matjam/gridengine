@@ -90,10 +90,10 @@ class ConsoleScreen : public Drawable
     const void writeRectangle(const sf::IntRect, const std::string text);
 
     // single character access at a location
-    inline void poke(const sf::Vector2i location, const char32_t character, const uint32_t fg, const uint32_t bg);
-    inline void poke(uint32_t, uint32_t, const char32_t character, const uint32_t fg, const uint32_t bg);
+    void poke(const sf::Vector2i location, const char32_t character, const uint32_t fg, const uint32_t bg);
+    void poke(uint32_t, uint32_t, const char32_t character, const uint32_t fg, const uint32_t bg);
 
-    inline const std::tuple<const char32_t, const uint32_t, const uint32_t> peek(const sf::Vector2i location);
+    const std::tuple<const char32_t, const uint32_t, const uint32_t> peek(const sf::Vector2i location);
 
     // will draw a box, filled or not, or a line of the given unicode character.
     const void rectangle(const sf::IntRect bounds, const char32_t character, const bool filled);
@@ -122,17 +122,17 @@ class ConsoleScreen : public Drawable
     // implements sf::Drawable::draw()
     void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 
-    inline struct Quad getQuadForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &);
+    struct Quad getQuadForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &);
 
-    inline void setQuadColorForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Color &);
+    void setQuadColorForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Color &);
 
-    inline void setTexCoordsForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Vector2f &);
+    void setTexCoordsForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Vector2f &);
 
     // sets a glyph in the texture atlas to a given sf:image; growing it if required.
     // returns the glyph index in the texture
     uint32_t setAtlasGlyph(const char32_t charcode, const sf::Image &image);
 
-    inline sf::Vector2f getAtlasCoordsForOffset(const uint32_t &);
+    sf::Vector2f getAtlasCoordsForOffset(const uint32_t &);
 
     uint32_t m_width;             // width in characters of the console
     uint32_t m_height;            // height in characters of the console

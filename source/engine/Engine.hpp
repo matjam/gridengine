@@ -46,7 +46,7 @@ class Engine
     enum class DebugScreen { NONE, CHAR_DUMP, LOADING, CRASH };
 
     Engine();
-    ~Engine();
+    virtual ~Engine() = default;
 
     void create(const sf::VideoMode &, std::unique_ptr<ConsoleScreen>, const std::string &);
     void start();
