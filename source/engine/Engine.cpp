@@ -114,15 +114,13 @@ void Engine::start()
     // Used to calculate FPS.
     Stats::begin("frame_time");
 
-    // time it takes to draw a frame minus the time it takes to display it; it's often the case that vsync is on so
-    // knowing the frames per second is often less useful than knowing what time it took to do everything up to flipping
-    // the buffer.
-    Stats::begin("render_time");
     while (m_window->isOpen()) {
         sf::Event event;
+        Stats::begin("process_event");
         while (m_window->pollEvent(event)) {
             m_state_stack->ProcessEvent(event);
         }
+        Stats::end("process_event");
 
         // execute per frame game logic if any.
         Stats::begin("update_time");
@@ -130,12 +128,11 @@ void Engine::start()
         Stats::end("update_time");
 
         // render the things.
-        renderDebugScreen();
-        render();
-
-        Stats::end("render_time");
-        m_window->display();
         Stats::begin("render_time");
+        render();
+        Stats::end("render_time");
+
+        m_window->display();
         Stats::end("frame_time");
         Stats::begin("frame_time");
 
@@ -153,7 +150,10 @@ void Engine::renderDebugScreen()
 
     switch (m_debug_screen) {
     case DebugScreen::NONE: break;
-    case DebugScreen::CHAR_DUMP: break;
+    case DebugScreen::CHAR_DUMP:
+        m_screen->clear();
+        m_screen->displayCharacterCodes(sf::Vector2i(4, 4), m_dump_start);
+        break;
     case DebugScreen::CRASH: m_screen->crash(); break;
     case DebugScreen::LOADING: m_screen->loading(); break;
     }
@@ -185,6 +185,7 @@ ScriptEngine &Engine::scriptEngine()
 
 void Engine::render()
 {
+    renderDebugScreen();
     m_screen->update();
     m_window->draw(*m_screen);
 }
@@ -212,14 +213,11 @@ void Engine::addDefaultHandlers()
 
 void Engine::keyEventHandler(const sf::Event &event)
 {
-    if (event.key.code == sf::Keyboard::Right && m_debug_screen == DebugScreen::CHAR_DUMP) {
+    if (event.key.code == sf::Keyboard::PageDown && m_debug_screen == DebugScreen::CHAR_DUMP) {
         m_dump_start += 272;
-
-        m_screen->rectangle(sf::IntRect(3, 3, 74, 39), 32, 1);
-        m_screen->displayCharacterCodes(sf::Vector2i(4, 4), m_dump_start);
     }
 
-    if (event.key.code == sf::Keyboard::Left && m_debug_screen == DebugScreen::CHAR_DUMP) {
+    if (event.key.code == sf::Keyboard::PageUp && m_debug_screen == DebugScreen::CHAR_DUMP) {
         if (m_dump_start > 304) {
             m_dump_start -= 272;
         } else {
@@ -229,34 +227,20 @@ void Engine::keyEventHandler(const sf::Event &event)
         if (m_dump_start < 32) {
             m_dump_start = 32;
         }
-
-        m_screen->rectangle(sf::IntRect(3, 3, 74, 39), 32, 1);
-        m_screen->displayCharacterCodes(sf::Vector2i(4, 4), m_dump_start);
     }
 
     if (event.key.code == sf::Keyboard::F1) {
         m_fps_overlay = !m_fps_overlay;
-
         m_screen->clear();
-        m_screen->rectangle(sf::IntRect(3, 3, 74, 39), 32, 1);
-
-        if (m_debug_screen == DebugScreen::CHAR_DUMP) {
-            m_screen->displayCharacterCodes(sf::Vector2i(4, 4), m_dump_start);
-        }
     }
 
     if (event.key.code == sf::Keyboard::F2) {
         if (m_debug_screen == DebugScreen::CHAR_DUMP) {
             m_debug_screen = DebugScreen::NONE;
-
-            m_screen->rectangle(sf::IntRect(3, 3, 74, 39), 32, 1);
+            m_screen->clear();
         } else {
             m_debug_screen = DebugScreen::CHAR_DUMP;
             m_screen->clear();
-        }
-        if (m_debug_screen == DebugScreen::CHAR_DUMP) {
-            m_screen->clear();
-            m_screen->displayCharacterCodes(sf::Vector2i(4, 4), m_dump_start);
         }
     }
 
@@ -264,7 +248,6 @@ void Engine::keyEventHandler(const sf::Event &event)
         if (m_debug_screen == DebugScreen::CRASH) {
             m_debug_screen = DebugScreen::NONE;
             m_screen->clear();
-            m_screen->rectangle(sf::IntRect(3, 3, 74, 39), 32, 1);
         } else {
             m_debug_screen = DebugScreen::CRASH;
         }
@@ -274,7 +257,7 @@ void Engine::keyEventHandler(const sf::Event &event)
         if (m_debug_screen == DebugScreen::LOADING) {
             m_debug_screen = DebugScreen::NONE;
             m_screen->clear();
-            m_screen->rectangle(sf::IntRect(3, 3, 74, 39), 32, 1);
+
         } else {
             m_debug_screen = DebugScreen::LOADING;
         }

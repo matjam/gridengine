@@ -77,7 +77,7 @@ Tile TileMap::getTile(sf::Vector2i location)
     return tile;
 }
 
-const std::unique_ptr<std::vector<char32_t>> TileMap::render(std::map<Tile::Type, char32_t> &mapping)
+std::unique_ptr<std::vector<char32_t>> TileMap::render(std::map<Tile::Type, char32_t> &mapping)
 {
     const std::lock_guard<std::mutex> lock(m_mutex);
     auto mapped_tiles = std::make_unique<std::vector<char32_t>>(w * h, mapping[Tile::Type::INVALID]);

@@ -110,7 +110,7 @@ class TileMap
 
     // render the map into a flat uint8_t given pairs of Tile::Type to char32_t.
     // This is intended to give us a way to map the generated map to printable screen characters.
-    const std::unique_ptr<std::vector<char32_t>> render(std::map<Tile::Type, char32_t> &);
+    std::unique_ptr<std::vector<char32_t>> render(std::map<Tile::Type, char32_t> &);
 
     // lock this when making changes
     std::mutex m_mutex;
