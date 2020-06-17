@@ -10,7 +10,7 @@ The end desire is that in the process of writing my game, that I will develop a 
 
 I hope it's useful.
 
-![gridengine.png](gridengine.png?raw=true "GridEngine")
+![gridengine.png](gridengine-ss.png?raw=true "GridEngine")
 
 # Features
 
