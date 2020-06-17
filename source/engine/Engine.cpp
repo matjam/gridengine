@@ -55,6 +55,11 @@ Engine::Engine()
     Stats::setMaxSlices(30);
 }
 
+void Engine::create()
+{
+    // should implement some default behaviour here.
+}
+
 void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScreen> console_screen,
                     const std::string &title)
 {
@@ -72,7 +77,6 @@ void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScre
 
     // set up our ConsoleScreen
     m_screen = std::move(console_screen);
-    m_screen->create(80, 45, "data/unscii-8.pcf", 8, 8); // hard coded for now
 
     // all the information related to the screen
     m_screen_width  = m_screen->size().x;

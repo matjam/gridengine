@@ -40,6 +40,10 @@
 namespace ge
 {
 
+struct EngineConfiguration {
+    std::string fontname;
+};
+
 class Engine
 {
   public:
@@ -48,8 +52,9 @@ class Engine
     Engine();
     virtual ~Engine() = default;
 
-    void create(const sf::VideoMode &, std::unique_ptr<ConsoleScreen>, const std::string &);
-    void start();
+    virtual void create();
+    virtual void create(const sf::VideoMode &, std::unique_ptr<ConsoleScreen>, const std::string &);
+    virtual void start();
 
     StateStack &stateStack();
     ConsoleScreen &screen();
