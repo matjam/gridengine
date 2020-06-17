@@ -27,18 +27,21 @@
 namespace Engine
 {
 
+std::mutex FileCache::m_file_cache_mutex;
+std::map<std::string, std::shared_ptr<std::vector<char>>> FileCache::m_file_cache;
+
 void FileCache::Clear()
 {
-    m_file_cache.clear();
+    FileCache::m_file_cache.clear();
 }
 
 const std::shared_ptr<std::vector<char>> FileCache::Get(const std::filesystem::path &path)
 {
-    const std::lock_guard<std::mutex> lock(m_file_cache_mutex);
+    const std::lock_guard<std::mutex> lock(FileCache::m_file_cache_mutex);
 
-    if (m_file_cache.count(path.string()) != 0) {
+    if (FileCache::m_file_cache.count(path.string()) != 0) {
         SPDLOG_INFO("Found cached asset {}", path.string());
-        return m_file_cache[path.string()];
+        return FileCache::m_file_cache[path.string()];
     }
 
     std::ifstream ifs(path, std::ios::binary | std::ios::ate);
@@ -62,7 +65,7 @@ const std::shared_ptr<std::vector<char>> FileCache::Get(const std::filesystem::p
         return nullptr;
     }
 
-    m_file_cache[path.string()] = buffer;
+    FileCache::m_file_cache[path.string()] = buffer;
     SPDLOG_INFO("Loaded asset {} into cache", path.string());
 
     return buffer;
