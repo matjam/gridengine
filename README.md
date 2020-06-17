@@ -1,10 +1,14 @@
 # GridEngine
 
-This project is what I'm building as a basis for my own roguelike. It is currently incomplete, and therefore I don't recommend you use it as the basis of your roguelike, just yet - unless you want to contribute to the project. I'm mostly putting it up here so other people who want to do something similar to me, have an existing pattern.
+This project is what I'm building as a basis for my own roguelike. It is currently incomplete, and therefore I don't recommend you use it as the basis of your roguelike, just yet - unless you want to contribute to the project. I'm mostly putting it up here so other people who want to do something similar to me, have an existing pattern, or at least if they're doing something similar they have some example code to check out.
+
+I found that a lot of what I wanted to do in SFML wasn't clearly written and hard to follow; I try to write things in a pretty obvious manner.
 
 I've been working on this in one shape or form for a while now, I felt it was time to just throw it all together on github to see if it's useful for anyone else. But primarily, it's only useful for me, probably.
 
 The end desire is that in the process of writing my game, that I will develop a framework that other people can use to make roguelikes, and can extend to make roguelike development in C++ easier.
+
+I hope it's useful.
 
 # Features
 
