@@ -1,0 +1,1 @@
+logInfo("script engine initialized")

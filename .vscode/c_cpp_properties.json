@@ -1,0 +1,56 @@
+{
+  "configurations": [
+    {
+      "name": "Win32",
+      "includePath": [
+        "${workspaceFolder}/source/**",
+        "C:/Dev/vcpkg/installed/x64-windows/include",
+        "C:/Dev/vcpkg/installed/x64-windows-static/include",
+        "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.26.28801/include"
+      ],
+      "defines": [
+        "_DEBUG",
+        "UNICODE",
+        "_UNICODE"
+      ],
+      "windowsSdkVersion": "10.0.18362.0",
+      "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.26.28801/bin/Hostx64/x64/cl.exe",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "configurationProvider": "ms-vscode.cmake-tools"
+    },
+    {
+      "name": "MacOS",
+      "includePath": [
+        "${workspaceFolder}/source/**",
+        "${workspaceFolder}/**",
+        "${vcpkgRoot}/x64-osx/include"
+      ],
+      "defines": [
+        "_DEBUG",
+        "UNICODE",
+        "_UNICODE"
+      ],
+      "windowsSdkVersion": "10.0.18362.0",
+      "compilerPath": "/usr/bin/clang++",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "configurationProvider": "ms-vscode.cmake-tools"
+    },
+    {
+      "name": "Linux",
+      "defines": [],
+      "compilerPath": "/usr/bin/clang",
+      "configurationProvider": "ms-vscode.cmake-tools",
+      "intelliSenseMode": "clang-x64",
+      "includePath": [
+        "${workspaceFolder}/source/**",
+        "${vcpkgRoot}/x64-linux/include",
+        "/usr/include"
+      ],
+      "cStandard": "c11",
+      "cppStandard": "c++17"
+    }
+  ],
+  "version": 4
+}

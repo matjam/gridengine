@@ -1,0 +1,20 @@
+---
+Language: Cpp
+AlignConsecutiveAssignments: true
+AlignEscapedNewlines: true
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: None
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+BinPackArguments: false
+BinPackParameters: true
+BreakBeforeBraces: Linux
+IndentWidth: 4
+TabWidth: 4
+ColumnLimit: 120
+UseTab: Never
+---
