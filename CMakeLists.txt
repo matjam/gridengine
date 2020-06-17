@@ -82,7 +82,9 @@ set_property(TARGET gridengine PROPERTY C_STANDARD 11)
 
 target_sources(gridengine PRIVATE ${gridengine_sources})
 
-target_include_directories(gridengine PRIVATE engine/source)
+target_include_directories(gridengine PRIVATE source)
+target_include_directories(gridengine PRIVATE source/engine)
+target_include_directories(gridengine PRIVATE source/game)
 target_include_directories(gridengine PRIVATE external/SelbaWard/src)
 target_include_directories(gridengine PRIVATE ${FREETYPE_INCLUDE_DIRS})
 
