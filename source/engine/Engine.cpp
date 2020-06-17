@@ -65,7 +65,7 @@ void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScre
 
     m_window =
         std::make_unique<sf::RenderWindow>(m_video_mode, title, sf::Style::Titlebar | sf::Style::Close, settings);
-    m_window->setVerticalSyncEnabled(false);
+    m_window->setVerticalSyncEnabled(true);
 
     // set up our ConsoleScreen
     m_screen = std::move(console_screen);
