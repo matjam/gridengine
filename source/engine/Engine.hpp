@@ -59,6 +59,7 @@ class Engine
     StateStack &stateStack();
     ConsoleScreen &screen();
     ScriptEngine &scriptEngine();
+    State &state();
 
   protected:
     virtual void render(); // implemented by derived classes for custom rendering.

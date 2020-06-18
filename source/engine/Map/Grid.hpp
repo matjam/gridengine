@@ -29,28 +29,70 @@
 namespace ge::Map
 {
 
-// A Tile based Map using uint8_t as the tile representation.
-class Tile
+// A Grid based Map using uint8_t as the tile representation.
+class Grid
 {
   public:
+    struct Point {
+        Point()
+        {
+            x = 0;
+            y = 0;
+        }
+
+        Point(uint32_t _x, uint32_t _y)
+        {
+            x = _x;
+            y = _y;
+        }
+
+        Point(const Point &other)
+        {
+            x = other.x;
+            y = other.y;
+        }
+
+        uint32_t x;
+        uint32_t y;
+
+        bool operator<(const Point &other) const
+        {
+            return x * y < other.x * other.y;
+        }
+    };
+
+    struct Area {
+        uint32_t left;
+        uint32_t top;
+        uint32_t width;
+        uint32_t height;
+    };
+
     enum Type : uint8_t // represents what type of tile a tile is
     { INVALID,          // we return this on out of bounds
       WALL,             // Solid areas of the map
       ROOM,
       HALLWAY,
-      DOOR };
+      DOOR,
+      CONNECTOR };
 
   public:
     void create(uint32_t width, uint32_t height);
 
-    // Get the Tile at the given location.
-    const Type get(const uint32_t x, const uint32_t y) const;
+    // Get the Tile at the given point.
+    const Type get(const Point point);
 
-    // Set the Tile at the given location.
-    void set(const uint32_t x, const uint32_t y, const Type);
+    // Set the Tile at the given point.
+    void set(const Point point, const Type);
 
     // returns the Tile data as raw values.
-    const std::vector<Type> &data() const;
+    const std::vector<Type> &data();
+
+    uint32_t width() const;
+    uint32_t height() const;
+
+    // tests if a given area contains any of the given tile
+    bool contains(Area area, Type type);
 
   private:
     uint32_t m_width  = 0;

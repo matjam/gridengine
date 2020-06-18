@@ -181,6 +181,11 @@ ScriptEngine &Engine::scriptEngine()
     return *m_script_engine;
 }
 
+State &Engine::state()
+{
+    return *m_state;
+}
+
 void Engine::render()
 {
     renderDebugScreen();

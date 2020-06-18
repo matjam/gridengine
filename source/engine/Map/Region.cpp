@@ -24,9 +24,21 @@
 
 #include "Region.hpp"
 #include "spdlog/spdlog.h"
+#include <exception>
 
 namespace ge::Map
 {
+
+Region::Region(const Region &other)
+{
+    m_next_region_id = other.m_next_region_id;
+    m_width          = other.m_width;
+    m_height         = other.m_height;
+
+    m_regions       = other.m_regions;
+    m_region_points = other.m_region_points;
+    m_region_names  = other.m_region_names;
+}
 
 // Regions are mapped directly to a Tile map so you need to provide a width/height.
 void Region::create(uint32_t width, uint32_t height)
@@ -34,10 +46,12 @@ void Region::create(uint32_t width, uint32_t height)
     m_width  = width;
     m_height = height;
 
-    m_region_locations.clear();
+    m_regions.clear();
+    m_region_points.clear();
     m_region_names.clear();
 
     m_region_names[0] = "DEFAULT";
+    m_region_points[0].clear();
     m_regions.resize(width * height, 0);
     m_next_region_id = 1;
 }
@@ -45,8 +59,12 @@ void Region::create(uint32_t width, uint32_t height)
 // add a new region and return a reference to the new region Type.
 const uint32_t Region::add(std::string name)
 {
-    m_region_names[m_next_region_id] = name;
+    auto this_region_id = m_next_region_id;
+
+    m_region_names[this_region_id] = name;
+    m_region_points[this_region_id].clear();
     m_next_region_id++;
+    return this_region_id;
 }
 
 // remove a region and set all of it's tiles to the given region.
@@ -59,86 +77,95 @@ void Region::remove(uint32_t old_region, uint32_t new_region)
         return;
     }
 
-    auto &old_it = m_region_locations.find(old_region);
-    if (old_it == m_region_locations.end()) {
-        SPDLOG_ERROR("attempt to remove region id {} but it was not found", old_region);
-        return;
+    auto old_it = m_region_points.find(old_region);
+    if (old_it == m_region_points.end()) {
+        throw std::exception(fmt::format("attempt to use region id {} but it was not found", old_region).c_str());
     }
 
-    auto &new_it = m_region_locations.find(new_region);
-    if (new_it == m_region_locations.end()) {
-        SPDLOG_ERROR("attempt to use region id {} but it was not found", new_region);
-        return;
+    auto new_it = m_region_points.find(new_region);
+    if (new_it == m_region_points.end()) {
+        throw std::exception(fmt::format("attempt to use region id {} but it was not found", new_region).c_str());
     }
 
-    for (auto &location : old_it->second) {
-        // copy all the locations in the old region to the new region's set.
-        new_it->second.insert(location);
+    for (auto &point : old_it->second) {
+        // copy all the points in the old region to the new region's set.
+        new_it->second.insert(point);
 
-        // set the location in the bitmap to the new region.
-        m_regions[location.first + location.second * m_width] = new_region;
+        // set the point in the bitmap to the new region.
+        m_regions[point.x + point.y * m_width] = new_region;
     }
 
     // erase our knowledge of the old region.
-    m_region_locations.erase(old_region);
+    m_region_points.erase(old_region);
     m_region_names.erase(old_region);
 }
 
 // return the friendly name for a given region.
 const std::string Region::getName(uint32_t region)
 {
-    auto &region_it = m_region_names.find(region);
+    auto region_it = m_region_names.find(region);
     if (region_it == m_region_names.end()) {
-        SPDLOG_ERROR("attempt to find region id {} but it was not found", region);
-        return;
+        throw std::exception(fmt::format("attempt to find region id {} but it was not found", region).c_str());
     }
 
     return region_it->second;
 }
 
-// get a reference to the region id at the given location.
-const uint32_t Region::get(uint32_t x, uint32_t y)
+// get a reference to the region id at the given point.
+const uint32_t Region::get(Grid::Point point)
 {
-    return m_regions[x + y * m_width];
+    return m_regions[point.x + point.y * m_width];
 }
 
-// set a given location to the region ID
-void Region::set(uint32_t x, uint32_t y, uint32_t region)
+// set a given point to the region ID
+void Region::set(Grid::Point point, uint32_t region)
 {
-    auto &region_it = m_region_locations.find(region);
-    if (region_it == m_region_locations.end()) {
-        SPDLOG_ERROR("attempt to use region id {} but it was not found", region);
+    if (point.x > m_width - 1 || point.y > m_height - 1)
         return;
+
+    auto region_it = m_region_points.find(region);
+    if (region_it == m_region_points.end()) {
+        throw std::exception(fmt::format("attempt to use region id {} but it was not found", region).c_str());
     }
 
     // this region will have been owned by something else.
-    auto old_region     = m_regions[x + y * m_width];
-    auto &old_region_it = m_region_locations.find(old_region);
-    if (old_region_it == m_region_locations.end()) {
-        SPDLOG_ERROR("attempt to use region id {} but it was not found", old_region);
-        return;
+    auto old_region    = m_regions[point.x + point.y * m_width];
+    auto old_region_it = m_region_points.find(old_region);
+    if (old_region_it == m_region_points.end()) {
+        throw std::exception(fmt::format("attempt to use old region id {} but it was not found", old_region).c_str());
     }
 
     // remove it from the old region set
-    old_region_it->second.erase({x, y});
+    old_region_it->second.erase(point);
 
     // add this x,y to the set of things this region owns.
-    region_it->second.insert({x, y});
+    region_it->second.insert(point);
 
     // update the bitmap.
-    m_regions[x + y * m_width] = region;
+    m_regions[point.x + point.y * m_width] = region;
 }
 
-// get a std::set of all the Locations for a given region ID.
-const std::set<Region::Location> &Region::locations(uint32_t region)
+// get a std::set of all the Points for a given region ID.
+const std::vector<Grid::Point> Region::points(uint32_t region)
 {
-    auto &region_it = m_region_locations.find(region);
-    if (region_it == m_region_locations.end()) {
-        SPDLOG_ERROR("attempt to use region id {} but it was not found", region);
-        return;
+    std::vector<Grid::Point> p;
+    p.resize(0);
+
+    auto region_it = m_region_points.find(region);
+    if (region_it == m_region_points.end()) {
+        throw std::exception(fmt::format("attempt to use region id {} but it was not found", region).c_str());
     }
 
-    return region_it->second;
+    for (auto point : region_it->second) {
+        p.push_back(point);
+    }
+
+    return p;
+}
+
+const std::vector<uint32_t> Region::regions()
+{
+    return m_regions;
 }
 
 } // namespace ge::Map
