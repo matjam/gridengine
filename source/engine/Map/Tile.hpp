@@ -24,30 +24,38 @@
 
 #pragma once
 
-#include <string>
 #include <vector>
 
-namespace Engine::UI
+namespace ge::Map
 {
 
-struct MenuOption {
-    uint32_t id;
-    std::string title;
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Implements a simple Character based modal menu to be drawn on a ConsoleScreen in the center of the screen.
-///
-/// Draws a box and rows of options and then allows the user to move up and down the options and select one.
-///
-/// Also supports a mouse click with hover highlighting.
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Menu
+// A Tile based Map using uint8_t as the tile representation.
+class Tile
 {
   public:
-    Menu() = default;
+    enum Type : uint8_t // represents what type of tile a tile is
+    { INVALID,          // we return this on out of bounds
+      WALL,             // Solid areas of the map
+      ROOM,
+      HALLWAY,
+      DOOR };
 
-    void create(std::string title, std::vector<MenuOption> &options, uint32_t width);
+  public:
+    void create(uint32_t width, uint32_t height);
+
+    // Get the Tile at the given location.
+    const Type get(const uint32_t x, const uint32_t y) const;
+
+    // Set the Tile at the given location.
+    void set(const uint32_t x, const uint32_t y, const Type);
+
+    // returns the Tile data as raw values.
+    const std::vector<Type> &data() const;
+
+  private:
+    uint32_t m_width  = 0;
+    uint32_t m_height = 0;
+    std::vector<Type> m_map; // actual map data.
 };
 
-} // namespace Engine::UI
+} // namespace ge::Map

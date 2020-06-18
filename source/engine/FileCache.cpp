@@ -23,6 +23,8 @@
  */
 
 #include "FileCache.hpp"
+#include <vector>
+#include <string.h>
 
 namespace ge
 {
@@ -47,7 +49,9 @@ const std::shared_ptr<std::vector<char>> FileCache::Get(const std::filesystem::p
     std::ifstream ifs(path, std::ios::binary | std::ios::ate);
 
     if (!ifs) {
-        SPDLOG_ERROR("unable to load asset {}: {}", path.string(), std::strerror(errno));
+        std::vector<char> buf(1024, 0);
+        strerror_s(buf.data(), buf.size() - 1, errno);
+        SPDLOG_ERROR("unable to load asset {}: {}", path.string(), buf.data());
         return nullptr;
     }
 
@@ -61,7 +65,9 @@ const std::shared_ptr<std::vector<char>> FileCache::Get(const std::filesystem::p
     auto buffer = std::make_shared<std::vector<char>>(size);
 
     if (!ifs.read(buffer->data(), static_cast<std::streamsize>(buffer->size()))) {
-        SPDLOG_ERROR("unable to load asset {}: {}", path.string(), std::strerror(errno));
+        std::vector<char> buf(1024, 0);
+        strerror_s(buf.data(), buf.size() - 1, errno);
+        SPDLOG_ERROR("unable to load asset {}: {}", path.string(), buf.data());
         return nullptr;
     }
 

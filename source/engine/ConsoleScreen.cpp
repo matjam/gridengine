@@ -85,10 +85,10 @@ const void ConsoleScreen::create(uint32_t width, uint32_t height, std::string fo
 
     for (uint32_t y = 0; y < m_height; y++) {
         for (uint32_t x = 0; x < m_width; x++) {
-            float v_left   = x * m_character_width;
-            float v_top    = y * m_character_height;
-            float v_width  = m_character_width;
-            float v_height = m_character_height;
+            float v_left   = static_cast<float>(x * m_character_width);
+            float v_top    = static_cast<float>(y * m_character_height);
+            float v_width  = static_cast<float>(m_character_width);
+            float v_height = static_cast<float>(m_character_height);
 
             auto q = getQuadForScreenLocation(m_console_bg_vertices, sf::Vector2i(x, y));
 
@@ -213,7 +213,7 @@ const void ConsoleScreen::write(const uint32_t x, uint32_t y, const std::string 
 const void ConsoleScreen::writeCenter(const sf::IntRect bounds, const std::string text)
 {
     auto offset = (bounds.width - text.length()) / 2;
-    write(sf::Vector2i(bounds.left + offset, bounds.top), text, bounds.width);
+    write(sf::Vector2i(bounds.left + offset, bounds.top), text, static_cast<uint32_t>(bounds.width));
 }
 
 // single character access at a location
@@ -397,11 +397,11 @@ const void ConsoleScreen::update()
                 FT_GlyphSlot glyph = m_face->glyph;
                 // the glyphs coming out of FreeType are bitmap mode so each bit is a pixel.
 
-                for (size_t y = 0; y < glyph->bitmap.rows; ++y) {
-                    for (size_t x = 0; x < glyph->bitmap.width; ++x) {
-                        int imageIndex = (glyph->bitmap.width * y) + x;
+                for (size_t glyph_y = 0; glyph_y < glyph->bitmap.rows; ++glyph_y) {
+                    for (size_t glyph_x = 0; glyph_x < glyph->bitmap.width; ++glyph_x) {
+                        int imageIndex = (glyph->bitmap.width * glyph_y) + glyph_x;
 
-                        if (glyphBit(glyph, x, y)) {
+                        if (glyphBit(glyph, glyph_x, glyph_y)) {
                             bitmap[imageIndex] = 255;
                         } else {
                             bitmap[imageIndex] = 0;
@@ -503,6 +503,10 @@ void ConsoleScreen::loadFont(const std::string font_file, uint32_t pixel_size)
         SPDLOG_ERROR("unable to load font data, unknown error");
         return;
     }
+
+    FT_Set_Pixel_Sizes(m_face,      /* handle to face object */
+                       0,           /* pixel_width           */
+                       pixel_size); /* pixel_height          */
 
     SPDLOG_INFO("loaded font {}", m_face->family_name);
 
