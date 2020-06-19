@@ -31,9 +31,9 @@
 #include <utility>
 #include <vector>
 
+#include "Bounds.hpp"
 #include "Grid.hpp"
 #include "Position.hpp"
-#include "Rect.hpp"
 
 /**
  * a Region is used to allow the game to define different areas of the map that

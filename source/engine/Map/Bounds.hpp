@@ -22,37 +22,34 @@
  * SOFTWARE.
  */
 
-#include "Rect.hpp"
-Rect::Rect()
-{
-    x1 = 0;
-    y1 = 0;
-    x2 = 0;
-    y2 = 0;
-}
+#pragma once
 
-Rect::Rect(int64_t x1_, int64_t y1_, int64_t x2_, int64_t y2_)
-{
-    x1 = x1_;
-    y1 = y1_;
-    x2 = x2_;
-    y2 = y2_;
-}
+#include "Position.hpp"
+#include <memory>
 
-Rect::Rect(const Rect &other)
+namespace ge::Map
 {
-    x1 = other.x1;
-    y1 = other.y1;
-    x2 = other.x2;
-    y2 = other.y2;
-}
 
-bool Rect::operator<(const Rect &other) const
-{
-    return x1 * y1 * x2 * y2 < other.x1 * other.y1 + other.x2 * other.y2;
-}
+struct Bounds {
+    Bounds();
+    Bounds(int64_t x1_, int64_t y1_, int64_t x2_, int64_t y2_);
+    Bounds(const Bounds &other);
+    uint64_t width() const;
+    uint64_t height() const;
 
-bool Rect::overlaps(const Rect &other) const
-{
-    return (x1 < other.x2 && x2 > other.x1 && y1 > other.y2 && y2 < other.y1);
-}
+    // checks if any part of the other Bounds overlap this Bounds
+    bool overlaps(const Bounds &other) const;
+
+    // checks if the other bounds is contained within this Bounds
+    bool contains(const Bounds &other) const;
+    bool contains(const Position &pos) const;
+
+    bool operator<(const Bounds &other) const;
+
+    int64_t x1;
+    int64_t y1;
+    int64_t x2;
+    int64_t y2;
+};
+
+} // namespace ge::Map

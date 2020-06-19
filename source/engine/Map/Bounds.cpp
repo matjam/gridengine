@@ -22,20 +22,62 @@
  * SOFTWARE.
  */
 
-#pragma once
+#include "Bounds.hpp"
+namespace ge::Map
+{
 
-#include <memory>
+Bounds::Bounds()
+{
+    x1 = 0;
+    y1 = 0;
+    x2 = 0;
+    y2 = 0;
+}
 
-struct Rect {
-    Rect();
-    Rect(int64_t x1_, int64_t y1_, int64_t x2_, int64_t y2_);
-    Rect(const Rect &other);
-    bool overlaps(const Rect &other) const;
+Bounds::Bounds(int64_t x1_, int64_t y1_, int64_t x2_, int64_t y2_)
+{
+    x1 = x1_;
+    y1 = y1_;
+    x2 = x2_;
+    y2 = y2_;
+}
 
-    bool operator<(const Rect &other) const;
+Bounds::Bounds(const Bounds &other)
+{
+    x1 = other.x1;
+    y1 = other.y1;
+    x2 = other.x2;
+    y2 = other.y2;
+}
 
-    int64_t x1;
-    int64_t y1;
-    int64_t x2;
-    int64_t y2;
-};
+bool Bounds::operator<(const Bounds &other) const
+{
+    return x1 * y1 * x2 * y2 < other.x1 * other.y1 + other.x2 * other.y2;
+}
+
+bool Bounds::overlaps(const Bounds &other) const
+{
+    return !(x1 > other.x2 || x2 < other.x1 || y1 > other.y2 || y2 < other.y1);
+}
+
+bool Bounds::contains(const Bounds &other) const
+{
+    return (x1 < other.x1 && x2 > other.x2 && y1 < other.y1 && y2 > other.y2);
+}
+
+bool Bounds::contains(const Position &pos) const
+{
+    return (x1 < pos.x && pos.x < x2 && y1 < pos.y && pos.y < x2);
+}
+
+uint64_t Bounds::width() const
+{
+    return x2 - x1;
+}
+
+uint64_t Bounds::height() const
+{
+    return y2 - y1;
+}
+
+} // namespace ge::Map
