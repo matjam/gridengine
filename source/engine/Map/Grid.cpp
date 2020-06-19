@@ -10,29 +10,29 @@ void Grid::create(uint32_t width, uint32_t height)
 
     m_map.clear();
 
-    m_map.resize(m_width * m_height, Grid::Type::WALL);
+    m_map.resize(m_width * m_height, Grid::Tile::WALL);
 }
 
-// Get the Tile at the given point.
-const Grid::Type Grid::get(const Point point)
+// Get the Tile at the given position.
+Grid::Tile Grid::get(const Position &pos)
 {
-    if (point.x > m_width - 1 || point.y > m_height - 1)
-        return Grid::Type::INVALID;
+    if (pos.x < 0 || pos.x > m_width - 1 || pos.y < 0 || pos.y > m_height - 1)
+        return Grid::Tile::INVALID;
 
-    return m_map[point.x + point.y * m_width];
+    return m_map[pos.x + pos.y * m_width];
 }
 
-// Set the Tile at the given point.
-void Grid::set(const Point point, const Grid::Type tile)
+// Set the Tile at the given position.
+void Grid::set(const Position &pos, const Grid::Tile tile)
 {
-    if (point.x > m_width - 1 || point.y > m_height - 1)
+    if (pos.x < 0 || pos.x > m_width - 1 || pos.y < 0 || pos.y > m_height - 1)
         return;
 
-    m_map[point.x + point.y * m_width] = tile;
+    m_map[pos.x + pos.y * m_width] = tile;
 }
 
 // returns the Tile data as raw values.
-const std::vector<Grid::Type> &Grid::data()
+const std::vector<Grid::Tile> &Grid::data()
 {
     return m_map;
 }
@@ -48,7 +48,7 @@ uint32_t Grid::height() const
 }
 
 // scans every tile in the given area.
-bool Grid::contains(Area area, Type type)
+bool Grid::contains(Area area, Tile type)
 {
     for (auto y = area.top; y < area.top + area.height; y++) {
         for (auto x = area.left; x < area.left + area.width; x++) {

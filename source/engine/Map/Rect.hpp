@@ -24,53 +24,18 @@
 
 #pragma once
 
-#include "Position.hpp"
-#include <vector>
+#include <memory>
 
-namespace ge::Map
-{
+struct Rect {
+    Rect();
+    Rect(int64_t x1_, int64_t y1_, int64_t x2_, int64_t y2_);
+    Rect(const Rect &other);
+    bool overlaps(const Rect &other) const;
 
-// A Grid based Map using uint8_t as the tile representation.
-class Grid
-{
-  public:
-    struct Area {
-        uint32_t left;
-        uint32_t top;
-        uint32_t width;
-        uint32_t height;
-    };
+    bool operator<(const Rect &other) const;
 
-    enum Tile : uint8_t // represents what type of tile a tile is
-    { INVALID,          // we return this on out of bounds
-      WALL,             // Solid areas of the map
-      ROOM,
-      HALLWAY,
-      DOOR,
-      CONNECTOR };
-
-  public:
-    void create(uint32_t width, uint32_t height);
-
-    // Get the Tile at the given point.
-    Tile get(const Position &pos);
-
-    // Set the Tile at the given point.
-    void set(const Position &pos, Tile);
-
-    // returns the Tile data as raw values.
-    const std::vector<Tile> &data();
-
-    uint32_t width() const;
-    uint32_t height() const;
-
-    // tests if a given area contains any of the given tile
-    bool contains(Area area, Tile type);
-
-  private:
-    uint32_t m_width  = 0;
-    uint32_t m_height = 0;
-    std::vector<Tile> m_map; // actual map data.
+    int64_t x1;
+    int64_t y1;
+    int64_t x2;
+    int64_t y2;
 };
-
-} // namespace ge::Map
