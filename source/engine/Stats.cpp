@@ -44,6 +44,10 @@ void Stats::begin(std::string name)
 
 void Stats::end(std::string name)
 {
+    auto active_timer_it = m_active_timers.find(name);
+    if (active_timer_it == m_active_timers.end())
+        return;
+
     auto elapsed_time = m_active_timers[name].getElapsedTime().asMicroseconds();
 
     m_slices[name].push_back(elapsed_time);
@@ -57,6 +61,10 @@ uint64_t Stats::getAverageTime(std::string name)
 {
     uint64_t total = 0;
     uint64_t count = 0;
+
+    auto slice_it = m_slices.find(name);
+    if (slice_it == m_slices.end())
+        return 0;
 
     for (auto &value : m_slices[name]) {
         total += value;
