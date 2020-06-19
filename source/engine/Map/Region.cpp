@@ -79,12 +79,12 @@ void Region::remove(uint32_t old_region, uint32_t new_region)
 
     auto old_it = m_region_points.find(old_region);
     if (old_it == m_region_points.end()) {
-        throw std::exception(fmt::format("attempt to use region id {} but it was not found", old_region).c_str());
+        throw std::runtime_error(fmt::format("attempt to use region id {} but it was not found", old_region));
     }
 
     auto new_it = m_region_points.find(new_region);
     if (new_it == m_region_points.end()) {
-        throw std::exception(fmt::format("attempt to use region id {} but it was not found", new_region).c_str());
+        throw std::runtime_error(fmt::format("attempt to use region id {} but it was not found", new_region));
     }
 
     for (auto &point : old_it->second) {
@@ -105,7 +105,7 @@ const std::string Region::getName(uint32_t region)
 {
     auto region_it = m_region_names.find(region);
     if (region_it == m_region_names.end()) {
-        throw std::exception(fmt::format("attempt to find region id {} but it was not found", region).c_str());
+        throw std::runtime_error(fmt::format("attempt to find region id {} but it was not found", region));
     }
 
     return region_it->second;
@@ -125,14 +125,14 @@ void Region::set(Grid::Point point, uint32_t region)
 
     auto region_it = m_region_points.find(region);
     if (region_it == m_region_points.end()) {
-        throw std::exception(fmt::format("attempt to use region id {} but it was not found", region).c_str());
+        throw std::runtime_error(fmt::format("attempt to use region id {} but it was not found", region));
     }
 
     // this region will have been owned by something else.
     auto old_region    = m_regions[point.x + point.y * m_width];
     auto old_region_it = m_region_points.find(old_region);
     if (old_region_it == m_region_points.end()) {
-        throw std::exception(fmt::format("attempt to use old region id {} but it was not found", old_region).c_str());
+        throw std::runtime_error(fmt::format("attempt to use old region id {} but it was not found", old_region));
     }
 
     // remove it from the old region set
@@ -153,7 +153,7 @@ const std::vector<Grid::Point> Region::points(uint32_t region)
 
     auto region_it = m_region_points.find(region);
     if (region_it == m_region_points.end()) {
-        throw std::exception(fmt::format("attempt to use region id {} but it was not found", region).c_str());
+        throw std::runtime_error(fmt::format("attempt to use region id {} but it was not found", region));
     }
 
     for (auto point : region_it->second) {

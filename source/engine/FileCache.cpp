@@ -23,8 +23,8 @@
  */
 
 #include "FileCache.hpp"
+#include <exception>
 #include <vector>
-#include <string.h>
 
 namespace ge
 {
@@ -46,35 +46,30 @@ const std::shared_ptr<std::vector<char>> FileCache::Get(const std::filesystem::p
         return FileCache::m_file_cache[path.string()];
     }
 
-    std::ifstream ifs(path, std::ios::binary | std::ios::ate);
+    try {
+        std::ifstream ifs(path, std::ios::binary | std::ios::ate);
+        ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
-    if (!ifs) {
-        std::vector<char> buf(1024, 0);
-        strerror_s(buf.data(), buf.size() - 1, errno);
-        SPDLOG_ERROR("unable to load asset {}: {}", path.string(), buf.data());
-        return nullptr;
+        auto end = ifs.tellg();
+        ifs.seekg(0, std::ios::beg);
+        auto size = std::size_t(end - ifs.tellg());
+
+        if (size == 0) {
+            SPDLOG_WARN("file {} is 0 size", path.string());
+            return nullptr;
+        }
+
+        auto buffer = std::make_shared<std::vector<char>>(size);
+        ifs.read(buffer->data(), static_cast<std::streamsize>(buffer->size()));
+        FileCache::m_file_cache[path.string()] = buffer;
+        SPDLOG_INFO("Loaded asset {} into cache", path.string());
+
+        return buffer;
+    } catch (std::system_error &e) {
+        SPDLOG_CRITICAL("unable to open file {}: {}", path.string(), e.code().message().c_str());
     }
 
-    auto end = ifs.tellg();
-    ifs.seekg(0, std::ios::beg);
-    auto size = std::size_t(end - ifs.tellg());
-    if (size == 0) {
-        SPDLOG_WARN("file {} is 0 size", path.string());
-        return nullptr;
-    }
-    auto buffer = std::make_shared<std::vector<char>>(size);
-
-    if (!ifs.read(buffer->data(), static_cast<std::streamsize>(buffer->size()))) {
-        std::vector<char> buf(1024, 0);
-        strerror_s(buf.data(), buf.size() - 1, errno);
-        SPDLOG_ERROR("unable to load asset {}: {}", path.string(), buf.data());
-        return nullptr;
-    }
-
-    FileCache::m_file_cache[path.string()] = buffer;
-    SPDLOG_INFO("Loaded asset {} into cache", path.string());
-
-    return buffer;
+    return nullptr;
 }
 
 } // namespace ge
