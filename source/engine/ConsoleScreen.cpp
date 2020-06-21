@@ -230,8 +230,7 @@ inline void ConsoleScreen::poke(const sf::Vector2i location, const char32_t char
     m_console_dirty[offset] = true;
 }
 
-inline void ConsoleScreen::poke(const uint32_t x, uint32_t y, const char32_t character, const uint32_t fg,
-                                const uint32_t bg)
+void ConsoleScreen::poke(const uint32_t x, uint32_t y, const char32_t character, const uint32_t fg, const uint32_t bg)
 {
     poke(sf::Vector2i(x, y), character, fg, bg);
 }
@@ -547,6 +546,10 @@ const void ConsoleScreen::loading()
             poke(sf::Vector2i(x, y), 32, 0, bg_color);
         }
     }
+}
+std::vector<sf::Color> ConsoleScreen::palette()
+{
+    return m_palette_colors;
 }
 
 } // namespace ge

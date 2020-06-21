@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "Bounds.hpp"
 #include "Position.hpp"
 #include <vector>
 
@@ -34,13 +35,6 @@ namespace ge::Map
 class Grid
 {
   public:
-    struct Area {
-        uint32_t left;
-        uint32_t top;
-        uint32_t width;
-        uint32_t height;
-    };
-
     enum Tile : uint8_t // represents what type of tile a tile is
     { INVALID,          // we return this on out of bounds
       WALL,             // Solid areas of the map
@@ -53,19 +47,19 @@ class Grid
     void create(uint32_t width, uint32_t height);
 
     // Get the Tile at the given point.
-    Tile get(const Position &pos);
+    virtual Tile get(const Position &pos);
 
     // Set the Tile at the given point.
-    void set(const Position &pos, Tile);
+    virtual void set(const Position &pos, Tile);
 
     // returns the Tile data as raw values.
-    const std::vector<Tile> &data();
+    virtual const std::vector<Tile> &data();
 
     uint32_t width() const;
     uint32_t height() const;
 
     // tests if a given area contains any of the given tile
-    bool contains(Area area, Tile type);
+    virtual bool contains(Bounds bounds, Tile type);
 
   private:
     uint32_t m_width  = 0;

@@ -23,6 +23,7 @@
  */
 
 #include "Position.hpp"
+#include <tuple>
 
 ge::Map::Position::Position()
 {
@@ -44,5 +45,5 @@ ge::Map::Position::Position(const ge::Map::Position &other)
 
 bool ge::Map::Position::operator<(const Position &other) const
 {
-    return x * y < other.x * other.y;
+    return std::tie(x, y) < std::tie(other.x, other.y);
 }

@@ -30,26 +30,26 @@
 namespace ge::Map
 {
 
-struct Bounds {
+class Bounds
+{
+  public:
     Bounds();
-    Bounds(int64_t x1_, int64_t y1_, int64_t x2_, int64_t y2_);
+    Bounds(int64_t left, int64_t top, uint64_t width, uint64_t height);
     Bounds(const Bounds &other);
+    int64_t left() const;
+    int64_t top() const;
     uint64_t width() const;
     uint64_t height() const;
 
-    // checks if any part of the other Bounds overlap this Bounds
-    bool overlaps(const Bounds &other) const;
-
-    // checks if the other bounds is contained within this Bounds
-    bool contains(const Bounds &other) const;
     bool contains(const Position &pos) const;
 
     bool operator<(const Bounds &other) const;
 
-    int64_t x1;
-    int64_t y1;
-    int64_t x2;
-    int64_t y2;
+  private:
+    int64_t m_left;
+    int64_t m_top;
+    uint64_t m_width;
+    uint64_t m_height;
 };
 
 } // namespace ge::Map

@@ -157,11 +157,11 @@ void Engine::renderDebugScreen()
     }
 
     if (m_fps_overlay) {
-        m_screen->rectangle(sf::IntRect(3, 3, 22, 5), 32, 1);
-        m_screen->write(sf::Vector2i(4, 4), fmt::format("{} fps", 1000000 / Stats::getAverageTime("frame_time")));
-        m_screen->write(sf::Vector2i(4, 5),
+        m_screen->rectangle(sf::IntRect(1, 39, 22, 5), 32, 1);
+        m_screen->write(sf::Vector2i(2, 40), fmt::format("{} fps", 1000000 / Stats::getAverageTime("frame_time")));
+        m_screen->write(sf::Vector2i(2, 41),
                         fmt::format("render time {} ms", Stats::getAverageTime("render_time") / 1000));
-        m_screen->write(sf::Vector2i(4, 6),
+        m_screen->write(sf::Vector2i(2, 42),
                         fmt::format("update time {} ms", Stats::getAverageTime("update_time") / 1000));
     }
 }

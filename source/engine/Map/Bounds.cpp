@@ -23,61 +23,69 @@
  */
 
 #include "Bounds.hpp"
+#include <spdlog/spdlog.h>
+#include <tuple>
+
 namespace ge::Map
 {
 
 Bounds::Bounds()
 {
-    x1 = 0;
-    y1 = 0;
-    x2 = 0;
-    y2 = 0;
+    m_left   = 0;
+    m_top    = 0;
+    m_width  = 0;
+    m_height = 0;
 }
 
-Bounds::Bounds(int64_t x1_, int64_t y1_, int64_t x2_, int64_t y2_)
+Bounds::Bounds(int64_t left, int64_t top, uint64_t width, uint64_t height)
 {
-    x1 = x1_;
-    y1 = y1_;
-    x2 = x2_;
-    y2 = y2_;
+    m_left   = left;
+    m_top    = top;
+    m_width  = width;
+    m_height = height;
 }
 
 Bounds::Bounds(const Bounds &other)
 {
-    x1 = other.x1;
-    y1 = other.y1;
-    x2 = other.x2;
-    y2 = other.y2;
+    m_left   = other.m_left;
+    m_top    = other.m_top;
+    m_width  = other.m_width;
+    m_height = other.m_height;
 }
 
 bool Bounds::operator<(const Bounds &other) const
 {
-    return x1 * y1 * x2 * y2 < other.x1 * other.y1 + other.x2 * other.y2;
-}
-
-bool Bounds::overlaps(const Bounds &other) const
-{
-    return !(x1 > other.x2 || x2 < other.x1 || y1 > other.y2 || y2 < other.y1);
-}
-
-bool Bounds::contains(const Bounds &other) const
-{
-    return (x1 < other.x1 && x2 > other.x2 && y1 < other.y1 && y2 > other.y2);
+    return std::tie(m_left, m_top, m_width, m_height) <
+           std::tie(other.m_left, other.m_top, other.m_width, other.m_height);
 }
 
 bool Bounds::contains(const Position &pos) const
 {
-    return (x1 < pos.x && pos.x < x2 && y1 < pos.y && pos.y < x2);
+    int64_t right      = m_left + m_width;
+    int64_t bottom     = m_top + m_height;
+    bool in_horizontal = m_left <= pos.x && pos.x <= right;
+    bool in_vertical   = m_top <= pos.y && pos.y <= bottom;
+    bool in_bounds     = in_horizontal && in_vertical;
+
+    return in_bounds;
 }
 
 uint64_t Bounds::width() const
 {
-    return x2 - x1;
+    return m_width;
 }
 
 uint64_t Bounds::height() const
 {
-    return y2 - y1;
+    return m_height;
+}
+int64_t Bounds::left() const
+{
+    return m_left;
+}
+int64_t Bounds::top() const
+{
+    return m_top;
 }
 
 } // namespace ge::Map

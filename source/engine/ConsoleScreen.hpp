@@ -70,35 +70,37 @@ class ConsoleScreen : public Drawable
 
     const sf::Vector2i size();
 
-    // a vector of sf::Colors to be used as the palette
+    // crete a palette from a vector of sf::Colors
     const void createPalette(const std::vector<sf::Color> &palette_colors);
 
+    // gets the current palette
+    std::vector<sf::Color> palette();
+
     // sets the colors for write/draw operations that don't specify a color.
-    const void setForeground(const uint32_t color);
-    const void setBackGround(const uint32_t color);
+    const void setForeground(uint32_t color);
+    const void setBackGround(uint32_t color);
 
     // writes the given string to a location
-    const void write(const sf::Vector2i location, const std::string text, const uint32_t max_width, const uint32_t fg,
-                     const uint32_t bg);
-    const void write(const sf::Vector2i location, const std::string text, const uint32_t max_width, const uint32_t fg);
-    const void write(const sf::Vector2i location, const std::string text, const uint32_t max_width);
-    const void write(const sf::Vector2i location, const std::string text);
-    const void write(const uint32_t x, uint32_t y, const std::string text);
+    const void write(sf::Vector2i location, std::string text, uint32_t max_width, uint32_t fg, uint32_t bg);
+    const void write(sf::Vector2i location, std::string text, uint32_t max_width, uint32_t fg);
+    const void write(sf::Vector2i location, std::string text, uint32_t max_width);
+    const void write(sf::Vector2i location, std::string text);
+    const void write(uint32_t x, uint32_t y, std::string text);
 
-    const void writeCenter(const sf::IntRect, const std::string);
+    const void writeCenter(sf::IntRect, std::string);
 
-    const void writeRectangle(const sf::IntRect, const std::string text);
+    const void writeRectangle(sf::IntRect, std::string text);
 
     // single character access at a location
-    void poke(const sf::Vector2i location, const char32_t character, const uint32_t fg, const uint32_t bg);
-    void poke(uint32_t, uint32_t, const char32_t character, const uint32_t fg, const uint32_t bg);
+    void poke(sf::Vector2i location, char32_t character, uint32_t fg, uint32_t bg);
+    void poke(uint32_t, uint32_t, char32_t character, uint32_t fg, uint32_t bg);
 
-    const std::tuple<const char32_t, const uint32_t, const uint32_t> peek(const sf::Vector2i location);
+    const std::tuple<const char32_t, const uint32_t, const uint32_t> peek(sf::Vector2i location);
 
     // will draw a box, filled or not, or a line of the given unicode character.
-    const void rectangle(const sf::IntRect bounds, const char32_t character, const bool filled);
+    const void rectangle(sf::IntRect bounds, char32_t character, bool filled);
 
-    const void displayCharacterCodes(const sf::Vector2i location, const char32_t start);
+    const void displayCharacterCodes(sf::Vector2i location, char32_t start);
 
     const void clear();
 
@@ -117,10 +119,10 @@ class ConsoleScreen : public Drawable
         sf::Vertex &d;
     };
 
-    void loadFont(const std::string font_file, uint32_t pixel_size);
+    void loadFont(std::string font_file, uint32_t pixel_size);
 
     // implements sf::Drawable::draw()
-    void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+    void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
     struct Quad getQuadForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &);
 
@@ -130,7 +132,7 @@ class ConsoleScreen : public Drawable
 
     // sets a glyph in the texture atlas to a given sf:image; growing it if required.
     // returns the glyph index in the texture
-    uint32_t setAtlasGlyph(const char32_t charcode, const sf::Image &image);
+    uint32_t setAtlasGlyph(char32_t charcode, const sf::Image &image);
 
     sf::Vector2f getAtlasCoordsForOffset(const uint32_t &);
 

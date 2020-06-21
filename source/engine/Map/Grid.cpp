@@ -9,13 +9,13 @@ void Grid::create(uint32_t width, uint32_t height)
     m_height = height;
 
     m_map.clear();
-
     m_map.resize(m_width * m_height, Grid::Tile::WALL);
 }
 
 // Get the Tile at the given position.
 Grid::Tile Grid::get(const Position &pos)
 {
+
     if (pos.x < 0 || pos.x > m_width - 1 || pos.y < 0 || pos.y > m_height - 1)
         return Grid::Tile::INVALID;
 
@@ -48,10 +48,10 @@ uint32_t Grid::height() const
 }
 
 // scans every tile in the given area.
-bool Grid::contains(Area area, Tile type)
+bool Grid::contains(Bounds bounds, Tile type)
 {
-    for (auto y = area.top; y < area.top + area.height; y++) {
-        for (auto x = area.left; x < area.left + area.width; x++) {
+    for (auto y = bounds.top(); y < bounds.top() + bounds.height(); y++) {
+        for (auto x = bounds.left(); x < bounds.left() + bounds.width(); x++) {
             if (x > m_width - 1 || y > m_height - 1)
                 continue;
 
