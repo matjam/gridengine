@@ -19,3 +19,4 @@ jobs:
       run: (cd build && cmake ..)
     - name: build
       run: (cd build && cmake --build .)
+
