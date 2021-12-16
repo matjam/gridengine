@@ -1,0 +1,12 @@
+{
+  "name": "GridEngine",
+  "version-string": "0.0.1",
+  "dependencies": [
+    "fmt",
+    "spdlog",
+    "boost",
+    "lua",
+    "freetype",
+    "sfml"
+  ]
+}
