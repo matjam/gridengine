@@ -20,7 +20,6 @@ jobs:
     - name: Restore artifacts, or setup vcpkg (do not install any package)
       uses: lukka/run-vcpkg@v10
       with:
-        vcpkgDirectory: '/usr/local/vcpkg'
         runVcpkgInstall: true
         vcpkgJsonGlob: 'vcpkg.json'
         appendedCacheKey: vcpkginstall
