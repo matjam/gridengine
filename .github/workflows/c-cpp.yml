@@ -18,7 +18,7 @@ jobs:
     - name: configure
       run: mkdir build
     - name: cmake
-      run: (cd build && cmake ..)
+      run: (cd build && cmake -GNinja ..)
     - name: build
       run: (cd build && cmake --build .)
 
