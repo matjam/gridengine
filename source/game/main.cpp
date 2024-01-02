@@ -27,9 +27,9 @@
 #include <filesystem>
 #include <memory>
 
-#include "engine/Engine.hpp"
-#include "GameScreen.hpp"
 #include "Game.hpp"
+#include "GameScreen.hpp"
+#include "engine/Engine.hpp"
 
 #ifdef __APPLE__
 #include "resourcePath.hpp"
@@ -47,7 +47,9 @@ int main()
 #endif
 
     auto engine = std::make_unique<gr::Game>();
-    engine->create(sf::VideoMode(1920, 1080, 32), std::make_unique<gr::GameScreen>(), "GridEngine");
+    auto screen = std::make_unique<gr::GameScreen>();
+    screen->create(80, 25, "data/unscii-8.pcf", 8, 8);
+    engine->create(sf::VideoMode(800, 600, 32), screen, "GridEngine");
     engine->start();
 
     return EXIT_SUCCESS;

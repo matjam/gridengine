@@ -1,29 +1,25 @@
 # CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
 
-############ VCPKG CONFIGURATION
-
+# ########### VCPKG CONFIGURATION
 if(WIN32)
     message("************************************")
     message("Building for Windows ... you mad man")
     message("************************************")
     set(CMAKE_TOOLCHAIN_FILE "C:/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake")
-    include_directories(SYSTEM "C:/dev/vcpkg/installed/x64-windows/include")
 elseif(APPLE)
     message("************************************")
     message("building for MacOS ... cool")
     message("************************************")
     set(CMAKE_TOOLCHAIN_FILE "/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake")
-    include_directories(SYSTEM "/usr/local/vcpkg/installed/x64-mac/include")
     set(MAKE_INSTALL_NAME_DIR @rpath)
 elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     message("************************************")
     message("building for Linux ... fanboi")
     message("************************************")
     set(CMAKE_TOOLCHAIN_FILE "/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake")
-    include_directories(SYSTEM "/usr/local/vcpkg/installed/x64-linux/include")
 else()
-    message( FATAL_ERROR "Unsupported platform." )
+    message(FATAL_ERROR "Unsupported platform.")
 endif()
 
 project(gridengine
@@ -39,7 +35,9 @@ set(VERSION_PATCH 1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(BUILD_SHARED_LIBS OFF)
-#set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,boost-*,misc-*,modernize-*,performance-*,portability-*,-modernize-avoid-bind,-modernize-use-trailing-return-type")
+
+# set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,boost-*,misc-*,modernize-*,performance-*,portability-*,-modernize-avoid-bind,-modernize-use-trailing-return-type")
+set(CMAKE_CXX_STANDARD 20)
 
 file(GLOB RESOURCE_DATA data/*)
 file(GLOB RESOURCE_SCRIPTS data/scripts/*)
@@ -63,12 +61,13 @@ find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(Lua REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(SFML CONFIG REQUIRED COMPONENTS window system audio graphics)
+find_package(sol2 CONFIG REQUIRED)
 
 # Find OS X libraries
 if(APPLE)
-	# Add Foundation
-	find_library(FOUNDATION_LIBRARY Foundation)
-	list(APPEND PROJECT_LIBRARIES ${FOUNDATION_LIBRARY})
+    # Add Foundation
+    find_library(FOUNDATION_LIBRARY Foundation)
+    list(APPEND PROJECT_LIBRARIES ${FOUNDATION_LIBRARY})
     include_directories(source/osx)
     add_executable(gridengine MACOSX_BUNDLE source/osx/resourcePath.mm ${gridengine_sources} ${RESOURCE_DATA} ${RESOURCE_SCRIPTS})
     set_source_files_properties(${RESOURCE_DATA} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/data)
@@ -95,7 +94,7 @@ target_link_libraries(gridengine PRIVATE fmt::fmt)
 target_link_libraries(gridengine PRIVATE Boost::filesystem)
 target_link_libraries(gridengine PRIVATE FLAC OpenAL OpenGL)
 target_link_libraries(gridengine PRIVATE ${LUA_LIBRARIES})
-# target_link_libraries(gridengine PRIVATE selbaward)
+target_link_libraries(gridengine PRIVATE sol2)
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     target_link_libraries(gridengine PRIVATE X11 dl UDev GL)
@@ -104,15 +103,15 @@ endif()
 if(APPLE)
     set_target_properties(gridengine PROPERTIES MACOSX_BUNDLE TRUE)
     set_target_properties(gridengine PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/source/osx/Info.plist)
-        
-	# Copy the assets and levels into the bundle
-	set(BUNDLE_PATH ${CMAKE_CURRENT_BINARY_DIR}/gridengine.app)
 
-	install(CODE "
+    # Copy the assets and levels into the bundle
+    set(BUNDLE_PATH ${CMAKE_CURRENT_BINARY_DIR}/gridengine.app)
+
+    install(CODE "
 		include(BundleUtilities)
         fixup_bundle(\"${BUNDLE_PATH}\" \"\" \"${LIBRARIES_DIR}\")
 		" COMPONENT Runtime
-	)
+    )
 endif()
 
 # cotire(gridengine)

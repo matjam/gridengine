@@ -25,11 +25,12 @@
 #pragma once
 
 #include "engine/ConsoleScreen.hpp"
+#include "engine/Engine.hpp"
 
 namespace gr
 {
 
-class GameScreen : public Engine::ConsoleScreen
+class GameScreen : public ge::ConsoleScreen
 {
 };
 

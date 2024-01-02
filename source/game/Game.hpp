@@ -30,7 +30,7 @@
 namespace gr
 {
 
-class Game : public Engine::Engine
+class Game : public ge::Engine
 {
   public:
     Game()

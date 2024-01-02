@@ -58,7 +58,7 @@ void State::AddHandler(sf::Event::EventType event_type, const event_handler_func
     if (event_handlers_.count(type) == 0) {
         auto d = std::make_unique<std::deque<event_handler_func>>();
         d->push_back(func);
-        event_handlers_[type] = move(d);
+        event_handlers_[type] = std::move(d);
         return;
     }
 

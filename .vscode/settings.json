@@ -1,5 +1,6 @@
 {
   "files.associations": {
+    "CODEOWNERS": "plaintext",
     "array": "cpp",
     "atomic": "cpp",
     "strstream": "cpp",
@@ -89,7 +90,15 @@
     "queue": "cpp",
     "stack": "cpp",
     "unordered_set": "cpp",
-    "__functional_03": "cpp"
+    "__functional_03": "cpp",
+    "__std_stream": "cpp",
+    "__verbose_abort": "cpp",
+    "any": "cpp",
+    "charconv": "cpp",
+    "regex": "cpp",
+    "shared_mutex": "cpp",
+    "source_location": "cpp",
+    "span": "cpp"
   },
   "editor.formatOnSave": true
 }
