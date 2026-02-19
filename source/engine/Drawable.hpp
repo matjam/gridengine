@@ -24,24 +24,33 @@
 
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "Types.hpp"
 
 namespace ge
 {
 
-class Drawable : public sf::Drawable, public sf::Transformable
+class Drawable
 {
   public:
+    virtual ~Drawable() = default;
+
     bool isVisible();
     void setVisible(bool);
 
     bool shouldDelete();
     void setShouldDelete(bool);
 
+    void setPosition(const Vec2f &pos);
+    const Vec2f &getPosition() const;
+    glm::mat4 getTransform() const;
+
   private:
-    bool is_visible;
-    bool should_delete;
+    bool is_visible = true;
+    bool should_delete = false;
+    Vec2f m_position{0.f, 0.f};
 };
 
 } // namespace ge

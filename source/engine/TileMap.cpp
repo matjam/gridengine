@@ -28,12 +28,6 @@
 namespace ge
 {
 
-// // Make this usable as a map key. Woot?
-// bool sf::Vector2i::operator<(const sf::Vector2i& rhs) const
-// {
-//     return x * y < rhs.x * rhs.y;
-// }
-
 std::string TileMap::getRegionName(int region_id)
 {
     if (regions.find(region_id) == regions.end()) {
@@ -64,7 +58,7 @@ TileMap::TileMap(int width, int height)
     SPDLOG_INFO("TileMap initialized with size {}x{}", width, height);
 }
 
-Tile TileMap::getTile(sf::Vector2i location)
+Tile TileMap::getTile(Vec2i location)
 {
     const std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -92,7 +86,7 @@ std::unique_ptr<std::vector<char32_t>> TileMap::render(std::map<Tile::Type, char
     return mapped_tiles;
 }
 
-void TileMap::setTile(sf::Vector2i location, Tile::Type type, int region_id)
+void TileMap::setTile(Vec2i location, Tile::Type type, int region_id)
 {
     assert(region_id != -1);
 
@@ -140,7 +134,7 @@ void TileMap::updateRegions(int old_region_id, int new_region_id)
     }
 }
 
-bool TileMap::is(sf::Vector2i loc, Tile::Type type)
+bool TileMap::is(Vec2i loc, Tile::Type type)
 {
     if (loc.x < 0 || loc.y < 0 || loc.x > w - 1 || loc.y > h - 1) {
         if (type == Tile::Type::WALL || type == Tile::Type::INVALID) {
@@ -153,139 +147,139 @@ bool TileMap::is(sf::Vector2i loc, Tile::Type type)
     return tiles[loc.y][loc.x].type == type;
 }
 
-bool TileMap::isEmpty(sf::Vector2i loc)
+bool TileMap::isEmpty(Vec2i loc)
 {
     return is(loc, Tile::Type::WALL) || is(loc, Tile::Type::INVALID);
 }
 
-bool TileMap::isInRoom(sf::Vector2i loc)
+bool TileMap::isInRoom(Vec2i loc)
 {
-    return (!isEmpty(loc) && !isEmpty(sf::Vector2i{loc.x - 1, loc.y}) && !isEmpty(sf::Vector2i{loc.x, loc.y - 1}) &&
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y}) && !isEmpty(sf::Vector2i{loc.x, loc.y + 1}));
+    return (!isEmpty(loc) && !isEmpty(Vec2i{loc.x - 1, loc.y}) && !isEmpty(Vec2i{loc.x, loc.y - 1}) &&
+            !isEmpty(Vec2i{loc.x + 1, loc.y}) && !isEmpty(Vec2i{loc.x, loc.y + 1}));
 }
 
-bool TileMap::isCornerInUpLeft(sf::Vector2i loc)
+bool TileMap::isCornerInUpLeft(Vec2i loc)
 {
     return (isEmpty(loc) &&                                // origin
-            isEmpty(sf::Vector2i{loc.x - 1, loc.y}) &&     // left
-            isEmpty(sf::Vector2i{loc.x, loc.y - 1}) &&     // down
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y - 1})); // down left
+            isEmpty(Vec2i{loc.x - 1, loc.y}) &&     // left
+            isEmpty(Vec2i{loc.x, loc.y - 1}) &&     // down
+            !isEmpty(Vec2i{loc.x - 1, loc.y - 1})); // down left
 }
 
-bool TileMap::isCornerInUpRight(sf::Vector2i loc)
+bool TileMap::isCornerInUpRight(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x + 1, loc.y}) &&     // right
-            isEmpty(sf::Vector2i{loc.x, loc.y - 1}) &&     // down
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y - 1})); // down right
+            isEmpty(Vec2i{loc.x + 1, loc.y}) &&     // right
+            isEmpty(Vec2i{loc.x, loc.y - 1}) &&     // down
+            !isEmpty(Vec2i{loc.x + 1, loc.y - 1})); // down right
 }
 
-bool TileMap::isCornerInDownLeft(sf::Vector2i loc)
+bool TileMap::isCornerInDownLeft(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x - 1, loc.y}) &&     // left
-            isEmpty(sf::Vector2i{loc.x, loc.y + 1}) &&     // down
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y + 1})); // down left
+            isEmpty(Vec2i{loc.x - 1, loc.y}) &&     // left
+            isEmpty(Vec2i{loc.x, loc.y + 1}) &&     // down
+            !isEmpty(Vec2i{loc.x - 1, loc.y + 1})); // down left
 }
 
-bool TileMap::isCornerInDownRight(sf::Vector2i loc)
+bool TileMap::isCornerInDownRight(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x + 1, loc.y}) &&     // right
-            isEmpty(sf::Vector2i{loc.x, loc.y + 1}) &&     // down
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y + 1})); // down right
+            isEmpty(Vec2i{loc.x + 1, loc.y}) &&     // right
+            isEmpty(Vec2i{loc.x, loc.y + 1}) &&     // down
+            !isEmpty(Vec2i{loc.x + 1, loc.y + 1})); // down right
 }
 
-bool TileMap::isCornerOutDownLeft(sf::Vector2i loc)
+bool TileMap::isCornerOutDownLeft(Vec2i loc)
 {
     return (isEmpty(loc) &&                             //
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y}) && // left
-            !isEmpty(sf::Vector2i{loc.x, loc.y + 1}));  // down
+            !isEmpty(Vec2i{loc.x - 1, loc.y}) && // left
+            !isEmpty(Vec2i{loc.x, loc.y + 1}));  // down
 }
 
-bool TileMap::isCornerOutUpLeft(sf::Vector2i loc)
+bool TileMap::isCornerOutUpLeft(Vec2i loc)
 {
     return (isEmpty(loc) &&                             //
-            !isEmpty(sf::Vector2i{loc.x, loc.y - 1}) && // up
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y}));  // left
+            !isEmpty(Vec2i{loc.x, loc.y - 1}) && // up
+            !isEmpty(Vec2i{loc.x - 1, loc.y}));  // left
 }
 
-bool TileMap::isCornerOutDownRight(sf::Vector2i loc)
+bool TileMap::isCornerOutDownRight(Vec2i loc)
 {
     return (isEmpty(loc) &&                             //
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y}) && // right
-            !isEmpty(sf::Vector2i{loc.x, loc.y + 1}));  // down
+            !isEmpty(Vec2i{loc.x + 1, loc.y}) && // right
+            !isEmpty(Vec2i{loc.x, loc.y + 1}));  // down
 }
 
-bool TileMap::isCornerOutUpRight(sf::Vector2i loc)
+bool TileMap::isCornerOutUpRight(Vec2i loc)
 {
     return (isEmpty(loc) &&                             //
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y}) && // right
-            !isEmpty(sf::Vector2i{loc.x, loc.y - 1}));  // up
+            !isEmpty(Vec2i{loc.x + 1, loc.y}) && // right
+            !isEmpty(Vec2i{loc.x, loc.y - 1}));  // up
 }
 
-bool TileMap::isWallVerticalUpLeft(sf::Vector2i loc)
+bool TileMap::isWallVerticalUpLeft(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x, loc.y - 1}) &&     // up
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y}) &&    // left
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y - 1})); // up left
+            isEmpty(Vec2i{loc.x, loc.y - 1}) &&     // up
+            !isEmpty(Vec2i{loc.x - 1, loc.y}) &&    // left
+            !isEmpty(Vec2i{loc.x - 1, loc.y - 1})); // up left
 }
 
-bool TileMap::isWallVerticalDownLeft(sf::Vector2i loc)
+bool TileMap::isWallVerticalDownLeft(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x, loc.y + 1}) &&     // down
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y}) &&    // left
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y + 1})); // down left
+            isEmpty(Vec2i{loc.x, loc.y + 1}) &&     // down
+            !isEmpty(Vec2i{loc.x - 1, loc.y}) &&    // left
+            !isEmpty(Vec2i{loc.x - 1, loc.y + 1})); // down left
 }
 
-bool TileMap::isWallVerticalUpRight(sf::Vector2i loc)
+bool TileMap::isWallVerticalUpRight(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x, loc.y - 1}) &&     // up
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y}) &&    // right
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y - 1})); // up right
+            isEmpty(Vec2i{loc.x, loc.y - 1}) &&     // up
+            !isEmpty(Vec2i{loc.x + 1, loc.y}) &&    // right
+            !isEmpty(Vec2i{loc.x + 1, loc.y - 1})); // up right
 }
 
-bool TileMap::isWallVerticalDownRight(sf::Vector2i loc)
+bool TileMap::isWallVerticalDownRight(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x, loc.y + 1}) &&     // down
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y}) &&    // right
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y + 1})); // down right
+            isEmpty(Vec2i{loc.x, loc.y + 1}) &&     // down
+            !isEmpty(Vec2i{loc.x + 1, loc.y}) &&    // right
+            !isEmpty(Vec2i{loc.x + 1, loc.y + 1})); // down right
 }
 
-bool TileMap::isWallHorizontalUpLeft(sf::Vector2i loc)
+bool TileMap::isWallHorizontalUpLeft(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x - 1, loc.y}) &&     // left
-            !isEmpty(sf::Vector2i{loc.x, loc.y - 1}) &&    // up
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y - 1})); // up left
+            isEmpty(Vec2i{loc.x - 1, loc.y}) &&     // left
+            !isEmpty(Vec2i{loc.x, loc.y - 1}) &&    // up
+            !isEmpty(Vec2i{loc.x - 1, loc.y - 1})); // up left
 }
 
-bool TileMap::isWallHorizontalUpRight(sf::Vector2i loc)
+bool TileMap::isWallHorizontalUpRight(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x + 1, loc.y}) &&     // right
-            !isEmpty(sf::Vector2i{loc.x, loc.y - 1}) &&    // up
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y - 1})); // up right
+            isEmpty(Vec2i{loc.x + 1, loc.y}) &&     // right
+            !isEmpty(Vec2i{loc.x, loc.y - 1}) &&    // up
+            !isEmpty(Vec2i{loc.x + 1, loc.y - 1})); // up right
 }
 
-bool TileMap::isWallHorizontalDownLeft(sf::Vector2i loc)
+bool TileMap::isWallHorizontalDownLeft(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x - 1, loc.y}) &&     // left
-            !isEmpty(sf::Vector2i{loc.x, loc.y + 1}) &&    // down
-            !isEmpty(sf::Vector2i{loc.x - 1, loc.y + 1})); // down left
+            isEmpty(Vec2i{loc.x - 1, loc.y}) &&     // left
+            !isEmpty(Vec2i{loc.x, loc.y + 1}) &&    // down
+            !isEmpty(Vec2i{loc.x - 1, loc.y + 1})); // down left
 }
 
-bool TileMap::isWallHorizontalDownRight(sf::Vector2i loc)
+bool TileMap::isWallHorizontalDownRight(Vec2i loc)
 {
     return (isEmpty(loc) &&                                //
-            isEmpty(sf::Vector2i{loc.x + 1, loc.y}) &&     // right
-            !isEmpty(sf::Vector2i{loc.x, loc.y + 1}) &&    // down
-            !isEmpty(sf::Vector2i{loc.x + 1, loc.y + 1})); // down right
+            isEmpty(Vec2i{loc.x + 1, loc.y}) &&     // right
+            !isEmpty(Vec2i{loc.x, loc.y + 1}) &&    // down
+            !isEmpty(Vec2i{loc.x + 1, loc.y + 1})); // down right
 }
 
 } // namespace ge

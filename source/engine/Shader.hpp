@@ -22,33 +22,44 @@
  * SOFTWARE.
  */
 
-#include "StateStack.hpp"
+#pragma once
+
+#include <string>
+
+#include <glad/glad.h>
+#include <glm/mat4x4.hpp>
 
 namespace ge
 {
 
-StateStack::StateStack()
+class ShaderProgram
 {
-    SPDLOG_INFO("StateStack created");
-}
+  public:
+    ShaderProgram() = default;
+    ~ShaderProgram();
 
-void StateStack::Push(const std::shared_ptr<State> &state)
+    ShaderProgram(const ShaderProgram &) = delete;
+    ShaderProgram &operator=(const ShaderProgram &) = delete;
+    ShaderProgram(ShaderProgram &&other) noexcept;
+    ShaderProgram &operator=(ShaderProgram &&other) noexcept;
+
+    bool compile(const char *vertexSource, const char *fragmentSource);
+    void use() const;
+    void setMat4(const char *name, const glm::mat4 &mat) const;
+    void setInt(const char *name, int value) const;
+    void setBool(const char *name, bool value) const;
+
+    GLuint id() const { return m_program; }
+
+  private:
+    GLuint m_program = 0;
+};
+
+// Embedded GLSL 330 core shaders for the console rendering pipeline
+namespace shaders
 {
-    const std::lock_guard<std::mutex> lock(state_stack_mutex);
-
-    state_stack.push(state);
-}
-
-[[maybe_unused]] void StateStack::Pop()
-{
-    const std::lock_guard<std::mutex> lock(state_stack_mutex);
-
-    state_stack.pop();
-}
-
-void StateStack::ProcessEvent(const Event &event)
-{
-    state_stack.top()->ProcessEvent(event);
-}
+    extern const char *const kVertexSource;
+    extern const char *const kFragmentSource;
+} // namespace shaders
 
 } // namespace ge

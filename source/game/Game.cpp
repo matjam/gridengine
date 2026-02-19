@@ -25,14 +25,12 @@
 #include "Game.hpp"
 #include "GameScreen.hpp"
 
-#include "SFML/Graphics.hpp"
-
 namespace gr
 {
 
 void Game::render()
 {
-    Engine::screen().write(sf::Vector2i(10, 0), "Hello from Grid Engine");
+    Engine::screen().write(ge::Vec2i(10, 0), "Hello from Grid Engine");
     this->Engine::render(); // call the engine's render function
 }
 

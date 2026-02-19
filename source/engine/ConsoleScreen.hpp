@@ -32,15 +32,23 @@
 #include <unordered_map>
 #include <vector>
 
-#include <SFML/Graphics.hpp>
+#include <glad/glad.h>
+#include <glm/mat4x4.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_BITMAP_H
 
 #include "Drawable.hpp"
+#include "Types.hpp"
 
 namespace ge
 {
+
+struct Vertex {
+    Vec2f position;  // 8 bytes
+    Color color;     // 4 bytes
+    Vec2f texCoords; // 8 bytes
+};
 
 struct FontInfo {
     uint32_t width;
@@ -48,118 +56,98 @@ struct FontInfo {
     uint32_t glyphs;
 };
 
-// Class that renders characters into a console style grid with a FG and BG color.
-//
-// When update() is called, we scan through each character and look in the m_glyph_images map for
-// the image that holds the glyph. If we don't find one, we construct it from the sf::Font that we
-// loaded on start. This is slow for the first time we render that character, but is cached after
-// that so should be fast.
-//
-// These images are then rendered directly to the texture backing the m_console_sprite.
-//
-// Obviously, only for fixed width fonts.
-
 class ConsoleScreen : public Drawable
 {
   public:
     ConsoleScreen();
+    virtual ~ConsoleScreen();
 
     const void create(uint32_t width, uint32_t height, std::string font_file, uint32_t font_width,
                       uint32_t font_height);
 
-    const sf::Vector2i characterSize();
+    const Vec2i characterSize();
+    const Vec2i size();
 
-    const sf::Vector2i size();
+    const void createPalette(const std::vector<Color> &palette_colors);
+    std::vector<Color> palette();
 
-    // crete a palette from a vector of sf::Colors
-    const void createPalette(const std::vector<sf::Color> &palette_colors);
-
-    // gets the current palette
-    std::vector<sf::Color> palette();
-
-    // sets the colors for write/draw operations that don't specify a color.
     const void setForeground(uint32_t color);
     const void setBackGround(uint32_t color);
 
-    // writes the given string to a location
-    const void write(sf::Vector2i location, std::string text, uint32_t max_width, uint32_t fg, uint32_t bg);
-    const void write(sf::Vector2i location, std::string text, uint32_t max_width, uint32_t fg);
-    const void write(sf::Vector2i location, std::string text, uint32_t max_width);
-    const void write(sf::Vector2i location, std::string text);
+    const void write(Vec2i location, std::string text, uint32_t max_width, uint32_t fg, uint32_t bg);
+    const void write(Vec2i location, std::string text, uint32_t max_width, uint32_t fg);
+    const void write(Vec2i location, std::string text, uint32_t max_width);
+    const void write(Vec2i location, std::string text);
     const void write(uint32_t x, uint32_t y, std::string text);
 
-    const void writeCenter(sf::IntRect, std::string);
+    const void writeCenter(IntRect, std::string);
+    const void writeRectangle(IntRect, std::string text);
 
-    const void writeRectangle(sf::IntRect, std::string text);
-
-    // single character access at a location
-    void poke(sf::Vector2i location, char32_t character, uint32_t fg, uint32_t bg);
+    void poke(Vec2i location, char32_t character, uint32_t fg, uint32_t bg);
     void poke(uint32_t, uint32_t, char32_t character, uint32_t fg, uint32_t bg);
 
-    const std::tuple<const char32_t, const uint32_t, const uint32_t> peek(sf::Vector2i location);
+    const std::tuple<const char32_t, const uint32_t, const uint32_t> peek(Vec2i location);
 
-    // will draw a box, filled or not, or a line of the given unicode character.
-    const void rectangle(sf::IntRect bounds, char32_t character, bool filled);
+    const void rectangle(IntRect bounds, char32_t character, bool filled);
 
-    const void displayCharacterCodes(sf::Vector2i location, char32_t start);
+    const void displayCharacterCodes(Vec2i location, char32_t start);
 
     const void clear();
 
-    // render the screen to the texture.
     const void update();
 
-    const void crash();
+    void render(const glm::mat4 &projection, const glm::mat4 &model);
 
+    const void crash();
     const void loading();
 
   private:
-    // 6 vertices per cell: two triangles to form a quad
     static constexpr int VERTS_PER_CELL = 6;
 
     void loadFont(std::string font_file, uint32_t pixel_size);
+    void initGL();
 
-    // implements sf::Drawable::draw()
-    void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
-
-    void setCellPositions(std::vector<sf::Vertex> &vertices, const sf::Vector2i &location,
+    void setCellPositions(std::vector<Vertex> &vertices, const Vec2i &location,
                           float left, float top, float width, float height);
 
-    void setCellColor(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Color &);
+    void setCellColor(std::vector<Vertex> &, const Vec2i &, const Color &);
 
-    void setCellTexCoords(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Vector2f &);
+    void setCellTexCoords(std::vector<Vertex> &, const Vec2i &, const Vec2f &);
 
-    // sets a glyph in the texture atlas to a given sf:image; growing it if required.
-    // returns the glyph index in the texture
-    uint32_t setAtlasGlyph(char32_t charcode, const sf::Image &image);
+    uint32_t setAtlasGlyph(char32_t charcode, const std::vector<uint8_t> &rgba_pixels);
 
-    sf::Vector2f getAtlasCoordsForOffset(const uint32_t &);
+    Vec2f getAtlasCoordsForOffset(const uint32_t &);
 
-    uint32_t m_width;             // width in characters of the console
-    uint32_t m_height;            // height in characters of the console
-    uint32_t m_character_height;  // pixel height of font
-    uint32_t m_character_width;   // pixel width of font
-    uint32_t m_current_fg;        // current fg color
-    uint32_t m_current_bg;        // current bg color
-    uint32_t m_glyph_count = 0;   // the number of glphys in the atlas
+    uint32_t m_width;
+    uint32_t m_height;
+    uint32_t m_character_height;
+    uint32_t m_character_width;
+    uint32_t m_current_fg;
+    uint32_t m_current_bg;
+    uint32_t m_glyph_count = 0;
     uint32_t m_atlas_width = 128; // in characters
 
-    FT_Library m_library; // FreeType font library
-    FT_Face m_face;       // FreeType font face
+    FT_Library m_library;
+    FT_Face m_face;
 
-    std::vector<sf::Color> m_palette_colors; // a vector of colors for the palette
+    std::vector<Color> m_palette_colors;
 
-    std::vector<bool> m_console_dirty; // how bad is this, really?
-    std::vector<uint8_t> m_console_fg; // offset to a palette color
-    std::vector<uint8_t> m_console_bg; // offset to a palette color
-    std::vector<char32_t> m_console;   // all the actual characters as a unicode code point.
+    std::vector<bool> m_console_dirty;
+    std::vector<uint8_t> m_console_fg;
+    std::vector<uint8_t> m_console_bg;
+    std::vector<char32_t> m_console;
 
-    std::vector<sf::Vertex> m_console_bg_vertices;       // all the vertexes for the background colors
-    std::vector<sf::Vertex> m_console_fg_vertices;       // foreground color of the rendered glyphs
-    sf::VertexBuffer m_console_bg_vertex_buffer;         // a vertex buffer for the background shapes
-    sf::VertexBuffer m_console_fg_vertex_buffer;         // a vertex buffer to render the glyphs with
-    sf::Texture m_console_atlas;                         // all of the glyphs we use in an atlas
-    std::unordered_map<char32_t, uint32_t> m_console_atlas_offset; // a map of the charcode to a given atlas offset.
-    std::mt19937 m_rng{std::random_device{}()};                   // fast PRNG for visual effects
+    std::vector<Vertex> m_console_bg_vertices;
+    std::vector<Vertex> m_console_fg_vertices;
+
+    GLuint m_bg_vao = 0, m_bg_vbo = 0;
+    GLuint m_fg_vao = 0, m_fg_vbo = 0;
+    GLuint m_atlas_texture = 0;
+    uint32_t m_atlas_tex_width = 0;
+    uint32_t m_atlas_tex_height = 0;
+
+    std::unordered_map<char32_t, uint32_t> m_console_atlas_offset;
+    std::mt19937 m_rng{std::random_device{}()};
 };
 
 } // namespace ge

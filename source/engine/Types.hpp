@@ -22,33 +22,50 @@
  * SOFTWARE.
  */
 
-#include "StateStack.hpp"
+#pragma once
+
+#include <cstdint>
+
+#include <glm/vec2.hpp>
+#include <glm/mat4x4.hpp>
 
 namespace ge
 {
 
-StateStack::StateStack()
-{
-    SPDLOG_INFO("StateStack created");
-}
+using Vec2f = glm::vec2;
+using Vec2i = glm::ivec2;
+using Vec2u = glm::uvec2;
 
-void StateStack::Push(const std::shared_ptr<State> &state)
-{
-    const std::lock_guard<std::mutex> lock(state_stack_mutex);
+struct Color {
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    uint8_t a = 255;
 
-    state_stack.push(state);
-}
+    constexpr Color() = default;
+    constexpr Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {}
 
-[[maybe_unused]] void StateStack::Pop()
-{
-    const std::lock_guard<std::mutex> lock(state_stack_mutex);
+    static const Color Black;
+    static const Color White;
+    static const Color Transparent;
 
-    state_stack.pop();
-}
+    bool operator==(const Color &other) const = default;
+};
 
-void StateStack::ProcessEvent(const Event &event)
-{
-    state_stack.top()->ProcessEvent(event);
-}
+struct IntRect {
+    Vec2i position{0, 0};
+    Vec2i size{0, 0};
+
+    constexpr IntRect() = default;
+    constexpr IntRect(Vec2i pos, Vec2i sz) : position(pos), size(sz) {}
+};
+
+struct FloatRect {
+    Vec2f position{0.f, 0.f};
+    Vec2f size{0.f, 0.f};
+
+    constexpr FloatRect() = default;
+    constexpr FloatRect(Vec2f pos, Vec2f sz) : position(pos), size(sz) {}
+};
 
 } // namespace ge

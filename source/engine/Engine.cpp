@@ -32,7 +32,7 @@
 
 #include <math.h> /* ceil */
 
-#include <SFML/Graphics.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "FileCache.hpp"
 #include "State.hpp"
@@ -48,11 +48,19 @@ Engine::Engine()
     sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>("gridrunner.log", 1000000, 5, true));
     console = std::make_shared<spdlog::logger>("console", begin(sinks), end(sinks));
 
-    // should probably put this in the Logging class.
-
     spdlog::set_default_logger(console);
 
     Stats::setMaxSlices(30);
+}
+
+Engine::~Engine()
+{
+    m_screen.reset();
+    if (m_window) {
+        glfwDestroyWindow(m_window);
+        m_window = nullptr;
+    }
+    glfwTerminate();
 }
 
 void Engine::create()
@@ -60,30 +68,62 @@ void Engine::create()
     // should implement some default behaviour here.
 }
 
-void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScreen> console_screen,
+void Engine::create(uint32_t window_width, uint32_t window_height,
+                    std::unique_ptr<ConsoleScreen> console_screen,
                     const std::string &font_file, uint32_t font_width, uint32_t font_height,
                     const std::string &title)
 {
     SPDLOG_INFO("creating engine");
 
-    m_video_mode  = video_mode;
-    m_font_width  = font_width;
-    m_font_height = font_height;
+    m_window_width  = window_width;
+    m_window_height = window_height;
+    m_font_width    = font_width;
+    m_font_height   = font_height;
 
-    sf::ContextSettings settings;
-    settings.depthBits = 24;
+    // Initialize GLFW
+    if (!glfwInit()) {
+        SPDLOG_ERROR("failed to initialize GLFW");
+        return;
+    }
 
-    m_window =
-        std::make_unique<sf::RenderWindow>(m_video_mode, title, sf::Style::Titlebar | sf::Style::Close, sf::State::Windowed, settings);
-    m_window->setVerticalSyncEnabled(true);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+    m_window = glfwCreateWindow(m_window_width, m_window_height, title.c_str(), nullptr, nullptr);
+    if (!m_window) {
+        SPDLOG_ERROR("failed to create GLFW window");
+        glfwTerminate();
+        return;
+    }
+
+    glfwMakeContextCurrent(m_window);
+
+    // Initialize GLAD — must be after glfwMakeContextCurrent
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        SPDLOG_ERROR("failed to initialize GLAD");
+        glfwDestroyWindow(m_window);
+        glfwTerminate();
+        m_window = nullptr;
+        return;
+    }
+
+    glfwSwapInterval(1); // vsync
+
+    // Install input callbacks
+    m_input_queue.install(m_window);
 
     // compute grid dimensions from window size — only whole cells
-    m_screen_width  = m_video_mode.size.x / m_font_width;
-    m_screen_height = m_video_mode.size.y / m_font_height;
+    m_screen_width  = m_window_width / m_font_width;
+    m_screen_height = m_window_height / m_font_height;
 
     SPDLOG_INFO("grid size: {}x{} cells (font {}x{}, window {}x{})",
                 m_screen_width, m_screen_height, m_font_width, m_font_height,
-                m_video_mode.size.x, m_video_mode.size.y);
+                m_window_width, m_window_height);
 
     // create the console screen with the computed dimensions
     m_screen = std::move(console_screen);
@@ -98,20 +138,34 @@ void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScre
     addDefaultHandlers();
     m_state_stack->Push(m_state);
 
-    // set up a 1:1 pixel view and center the grid
+    // set up orthographic projection: top-left origin, Y-down (matches SFML's coordinate system)
+    m_projection = glm::ortho(0.0f, static_cast<float>(m_window_width),
+                              static_cast<float>(m_window_height), 0.0f,
+                              -1.0f, 1.0f);
+
+    // center the grid in the window
     uint32_t grid_pixel_w = m_screen_width * m_font_width;
     uint32_t grid_pixel_h = m_screen_height * m_font_height;
-    float offset_x = static_cast<float>(m_video_mode.size.x - grid_pixel_w) / 2.0f;
-    float offset_y = static_cast<float>(m_video_mode.size.y - grid_pixel_h) / 2.0f;
+    float offset_x = static_cast<float>(m_window_width - grid_pixel_w) / 2.0f;
+    float offset_y = static_cast<float>(m_window_height - grid_pixel_h) / 2.0f;
 
-    sf::View view(sf::FloatRect({0.f, 0.f},
-                  {static_cast<float>(m_video_mode.size.x), static_cast<float>(m_video_mode.size.y)}));
-    m_window->setView(view);
-    m_screen->setPosition(sf::Vector2f{offset_x, offset_y});
+    m_screen->setPosition(Vec2f{offset_x, offset_y});
+    m_model = m_screen->getTransform();
 
     m_screen->setBackGround(0);
     m_screen->setForeground(1);
     m_screen->clear();
+
+    // Set viewport to framebuffer size (may differ from window size on HiDPI/Wayland)
+    int fb_width, fb_height;
+    glfwGetFramebufferSize(m_window, &fb_width, &fb_height);
+    glViewport(0, 0, fb_width, fb_height);
+
+    SPDLOG_INFO("framebuffer size: {}x{} (window: {}x{})", fb_width, fb_height, m_window_width, m_window_height);
+
+    // Enable blending for glyph transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     SPDLOG_INFO("engine created");
 }
@@ -120,12 +174,12 @@ void Engine::start()
 {
     SPDLOG_INFO("starting engine loop");
 
-    // Used to calculate FPS.
     Stats::begin("frame_time");
 
-    while (m_window->isOpen()) {
+    while (!glfwWindowShouldClose(m_window)) {
         Stats::begin("process_event");
-        while (const auto event = m_window->pollEvent()) {
+        glfwPollEvents();
+        while (auto event = m_input_queue.poll()) {
             m_state_stack->ProcessEvent(*event);
         }
         Stats::end("process_event");
@@ -137,10 +191,12 @@ void Engine::start()
 
         // render the things.
         Stats::begin("render_time");
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
         render();
         Stats::end("render_time");
 
-        m_window->display();
+        glfwSwapBuffers(m_window);
         Stats::end("frame_time");
         Stats::begin("frame_time");
 
@@ -150,7 +206,6 @@ void Engine::start()
     SPDLOG_INFO("ending engine loop");
 
     m_screen.reset();
-    m_window.reset();
 }
 
 void Engine::renderDebugScreen()
@@ -160,7 +215,7 @@ void Engine::renderDebugScreen()
     case DebugScreen::NONE: break;
     case DebugScreen::CHAR_DUMP:
         m_screen->clear();
-        m_screen->displayCharacterCodes(sf::Vector2i(4, 4), m_dump_start);
+        m_screen->displayCharacterCodes(Vec2i(4, 4), m_dump_start);
         break;
     case DebugScreen::CRASH: m_screen->crash(); break;
     case DebugScreen::LOADING: m_screen->loading(); break;
@@ -168,11 +223,11 @@ void Engine::renderDebugScreen()
 
     if (m_fps_overlay) {
         int oy = static_cast<int>(m_screen_height) - 6;
-        m_screen->rectangle(sf::IntRect(sf::Vector2i{1, oy}, sf::Vector2i{22, 5}), 32, 1);
-        m_screen->write(sf::Vector2i(2, oy + 1), fmt::format("{} fps", 1000000 / Stats::getAverageTime("frame_time")));
-        m_screen->write(sf::Vector2i(2, oy + 2),
+        m_screen->rectangle(IntRect(Vec2i{1, oy}, Vec2i{22, 5}), 32, 1);
+        m_screen->write(Vec2i(2, oy + 1), fmt::format("{} fps", 1000000 / Stats::getAverageTime("frame_time")));
+        m_screen->write(Vec2i(2, oy + 2),
                         fmt::format("render time {} ms", Stats::getAverageTime("render_time") / 1000));
-        m_screen->write(sf::Vector2i(2, oy + 3),
+        m_screen->write(Vec2i(2, oy + 3),
                         fmt::format("update time {} ms", Stats::getAverageTime("update_time") / 1000));
     }
 }
@@ -201,7 +256,7 @@ void Engine::render()
 {
     renderDebugScreen();
     m_screen->update();
-    m_window->draw(*m_screen);
+    m_screen->render(m_projection, m_model);
 }
 
 void Engine::update()
@@ -210,29 +265,27 @@ void Engine::update()
 
 void Engine::addDefaultHandlers()
 {
-    m_state->AddHandler<sf::Event::Closed>([&](const sf::Event::Closed &) {
+    m_state->AddHandler<event::Closed>([&](const event::Closed &) {
         SPDLOG_INFO("window closed");
-        m_window->close();
+        glfwSetWindowShouldClose(m_window, GLFW_TRUE);
     });
 
-    m_state->AddHandler<sf::Event::Resized>([&](const sf::Event::Resized &resized) {
-        sf::FloatRect visibleArea(sf::Vector2f{0.f, 0.f},
-                                  sf::Vector2f{static_cast<float>(resized.size.x), static_cast<float>(resized.size.y)});
-        m_window->setView(sf::View(visibleArea));
+    m_state->AddHandler<event::Resized>([&](const event::Resized &resized) {
+        glViewport(0, 0, resized.width, resized.height);
     });
 
-    m_state->AddHandler<sf::Event::KeyPressed>([&](const sf::Event::KeyPressed &keyPress) {
+    m_state->AddHandler<event::KeyPressed>([&](const event::KeyPressed &keyPress) {
         keyEventHandler(keyPress);
     });
 }
 
-void Engine::keyEventHandler(const sf::Event::KeyPressed &keyPress)
+void Engine::keyEventHandler(const event::KeyPressed &keyPress)
 {
-    if (keyPress.code == sf::Keyboard::Key::PageDown && m_debug_screen == DebugScreen::CHAR_DUMP) {
+    if (keyPress.code == Key::PageDown && m_debug_screen == DebugScreen::CHAR_DUMP) {
         m_dump_start += 272;
     }
 
-    if (keyPress.code == sf::Keyboard::Key::PageUp && m_debug_screen == DebugScreen::CHAR_DUMP) {
+    if (keyPress.code == Key::PageUp && m_debug_screen == DebugScreen::CHAR_DUMP) {
         if (m_dump_start > 304) {
             m_dump_start -= 272;
         } else {
@@ -244,12 +297,12 @@ void Engine::keyEventHandler(const sf::Event::KeyPressed &keyPress)
         }
     }
 
-    if (keyPress.code == sf::Keyboard::Key::F1) {
+    if (keyPress.code == Key::F1) {
         m_fps_overlay = !m_fps_overlay;
         m_screen->clear();
     }
 
-    if (keyPress.code == sf::Keyboard::Key::F2) {
+    if (keyPress.code == Key::F2) {
         if (m_debug_screen == DebugScreen::CHAR_DUMP) {
             m_debug_screen = DebugScreen::NONE;
             m_screen->clear();
@@ -259,7 +312,7 @@ void Engine::keyEventHandler(const sf::Event::KeyPressed &keyPress)
         }
     }
 
-    if (keyPress.code == sf::Keyboard::Key::F3) {
+    if (keyPress.code == Key::F3) {
         if (m_debug_screen == DebugScreen::CRASH) {
             m_debug_screen = DebugScreen::NONE;
             m_screen->clear();
@@ -268,7 +321,7 @@ void Engine::keyEventHandler(const sf::Event::KeyPressed &keyPress)
         }
     }
 
-    if (keyPress.code == sf::Keyboard::Key::F4) {
+    if (keyPress.code == Key::F4) {
         if (m_debug_screen == DebugScreen::LOADING) {
             m_debug_screen = DebugScreen::NONE;
             m_screen->clear();

@@ -47,4 +47,19 @@ void Drawable::setShouldDelete(bool _should_delete)
     should_delete = _should_delete;
 }
 
+void Drawable::setPosition(const Vec2f &pos)
+{
+    m_position = pos;
+}
+
+const Vec2f &Drawable::getPosition() const
+{
+    return m_position;
+}
+
+glm::mat4 Drawable::getTransform() const
+{
+    return glm::translate(glm::mat4(1.0f), glm::vec3(m_position, 0.0f));
+}
+
 } // namespace ge

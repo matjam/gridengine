@@ -34,16 +34,16 @@ void State::SetName(const std::string &name)
 }
 
 // runs each handler in the order in which it was added.
-void State::ProcessEvent(const sf::Event &event)
+void State::ProcessEvent(const Event &event)
 {
-    event.visit([this, &event](const auto &e) {
+    std::visit([this, &event](const auto &e) {
         auto key = std::type_index(typeid(e));
         if (auto it = event_handlers_.find(key); it != event_handlers_.end()) {
             for (auto &handler : *it->second) {
                 handler(event);
             }
         }
-    });
+    }, event);
 }
 
 } // namespace ge

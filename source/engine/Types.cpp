@@ -22,33 +22,13 @@
  * SOFTWARE.
  */
 
-#include "StateStack.hpp"
+#include "Types.hpp"
 
 namespace ge
 {
 
-StateStack::StateStack()
-{
-    SPDLOG_INFO("StateStack created");
-}
-
-void StateStack::Push(const std::shared_ptr<State> &state)
-{
-    const std::lock_guard<std::mutex> lock(state_stack_mutex);
-
-    state_stack.push(state);
-}
-
-[[maybe_unused]] void StateStack::Pop()
-{
-    const std::lock_guard<std::mutex> lock(state_stack_mutex);
-
-    state_stack.pop();
-}
-
-void StateStack::ProcessEvent(const Event &event)
-{
-    state_stack.top()->ProcessEvent(event);
-}
+const Color Color::Black{0, 0, 0, 255};
+const Color Color::White{255, 255, 255, 255};
+const Color Color::Transparent{0, 0, 0, 0};
 
 } // namespace ge

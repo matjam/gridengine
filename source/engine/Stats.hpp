@@ -24,9 +24,10 @@
 
 #pragma once
 
-#include <SFML/System.hpp>
+#include <chrono>
 #include <deque>
 #include <map>
+#include <string>
 
 namespace ge
 {
@@ -42,7 +43,7 @@ class Stats
   private:
     static uint64_t m_slice_max;
     static std::map<std::string, std::deque<uint64_t>> m_slices;
-    static std::map<std::string, sf::Clock> m_active_timers;
+    static std::map<std::string, std::chrono::steady_clock::time_point> m_active_timers;
 };
 
 } // namespace ge

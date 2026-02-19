@@ -22,33 +22,37 @@
  * SOFTWARE.
  */
 
-#include "StateStack.hpp"
+#pragma once
+
+#include <deque>
+#include <mutex>
+#include <optional>
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include "Event.hpp"
 
 namespace ge
 {
 
-StateStack::StateStack()
+class InputQueue
 {
-    SPDLOG_INFO("StateStack created");
-}
+  public:
+    void install(GLFWwindow *window);
+    void push(Event event);
+    std::optional<Event> poll();
 
-void StateStack::Push(const std::shared_ptr<State> &state)
-{
-    const std::lock_guard<std::mutex> lock(state_stack_mutex);
+  private:
+    static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+    static void charCallback(GLFWwindow *window, unsigned int codepoint);
+    static void windowCloseCallback(GLFWwindow *window);
+    static void framebufferSizeCallback(GLFWwindow *window, int width, int height);
+    static void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+    static void cursorPosCallback(GLFWwindow *window, double xpos, double ypos);
 
-    state_stack.push(state);
-}
-
-[[maybe_unused]] void StateStack::Pop()
-{
-    const std::lock_guard<std::mutex> lock(state_stack_mutex);
-
-    state_stack.pop();
-}
-
-void StateStack::ProcessEvent(const Event &event)
-{
-    state_stack.top()->ProcessEvent(event);
-}
+    std::mutex m_mutex;
+    std::deque<Event> m_queue;
+};
 
 } // namespace ge

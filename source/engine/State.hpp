@@ -30,28 +30,30 @@
 #include <memory>
 #include <string>
 #include <typeindex>
+#include <variant>
 
 #include <spdlog/spdlog.h>
-#include <SFML/Window.hpp>
+
+#include "Event.hpp"
 
 namespace ge
 {
 
-using event_handler_func = std::function<void(const sf::Event &)>;
+using event_handler_func = std::function<void(const Event &)>;
 
 class State
 {
   public:
     void SetName(const std::string &);
 
-    void ProcessEvent(const sf::Event &);
+    void ProcessEvent(const Event &);
 
     template <typename EventType>
     void AddHandler(std::function<void(const EventType &)> func)
     {
         auto key     = std::type_index(typeid(EventType));
-        auto wrapper = [f = std::move(func)](const sf::Event &event) {
-            if (const auto *e = event.getIf<EventType>())
+        auto wrapper = [f = std::move(func)](const Event &event) {
+            if (const auto *e = std::get_if<EventType>(&event))
                 f(*e);
         };
 

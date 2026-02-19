@@ -31,7 +31,7 @@
 #include <memory>
 #include <mutex>
 
-#include <SFML/Graphics.hpp>
+#include "Types.hpp"
 
 // This all requires a refactor.
 
@@ -115,32 +115,32 @@ class TileMap
     // lock this when making changes
     std::mutex m_mutex;
 
-    Tile getTile(sf::Vector2i);
-    void setTile(sf::Vector2i, Tile::Type, int region_id);
+    Tile getTile(Vec2i);
+    void setTile(Vec2i, Tile::Type, int region_id);
 
     std::string getRegionName(int);
     int createRegion(std::string); // generate a new region with a given name.
     void updateRegions(int, int);
 
-    bool is(sf::Vector2i, Tile::Type);
-    bool isEmpty(sf::Vector2i);
-    bool isInRoom(sf::Vector2i);
-    bool isCornerInUpLeft(sf::Vector2i);
-    bool isCornerInUpRight(sf::Vector2i);
-    bool isCornerInDownLeft(sf::Vector2i);
-    bool isCornerInDownRight(sf::Vector2i);
-    bool isCornerOutDownLeft(sf::Vector2i);
-    bool isCornerOutUpLeft(sf::Vector2i);
-    bool isCornerOutDownRight(sf::Vector2i);
-    bool isCornerOutUpRight(sf::Vector2i);
-    bool isWallVerticalUpLeft(sf::Vector2i);
-    bool isWallVerticalDownLeft(sf::Vector2i);
-    bool isWallVerticalUpRight(sf::Vector2i);
-    bool isWallVerticalDownRight(sf::Vector2i);
-    bool isWallHorizontalUpLeft(sf::Vector2i);
-    bool isWallHorizontalUpRight(sf::Vector2i);
-    bool isWallHorizontalDownLeft(sf::Vector2i);
-    bool isWallHorizontalDownRight(sf::Vector2i);
+    bool is(Vec2i, Tile::Type);
+    bool isEmpty(Vec2i);
+    bool isInRoom(Vec2i);
+    bool isCornerInUpLeft(Vec2i);
+    bool isCornerInUpRight(Vec2i);
+    bool isCornerInDownLeft(Vec2i);
+    bool isCornerInDownRight(Vec2i);
+    bool isCornerOutDownLeft(Vec2i);
+    bool isCornerOutUpLeft(Vec2i);
+    bool isCornerOutDownRight(Vec2i);
+    bool isCornerOutUpRight(Vec2i);
+    bool isWallVerticalUpLeft(Vec2i);
+    bool isWallVerticalDownLeft(Vec2i);
+    bool isWallVerticalUpRight(Vec2i);
+    bool isWallVerticalDownRight(Vec2i);
+    bool isWallHorizontalUpLeft(Vec2i);
+    bool isWallHorizontalUpRight(Vec2i);
+    bool isWallHorizontalDownLeft(Vec2i);
+    bool isWallHorizontalDownRight(Vec2i);
 };
 
 } // namespace ge

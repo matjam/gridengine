@@ -7,7 +7,12 @@
     "boost-filesystem",
     "lua",
     "freetype",
-    "sfml",
+    {
+      "name": "glfw3",
+      "features": ["wayland"]
+    },
+    "glad",
+    "glm",
     "sol2"
   ]
 }

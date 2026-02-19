@@ -29,7 +29,7 @@ namespace ge
 
 uint64_t Stats::m_slice_max;
 std::map<std::string, std::deque<uint64_t>> Stats::m_slices;
-std::map<std::string, sf::Clock> Stats::m_active_timers;
+std::map<std::string, std::chrono::steady_clock::time_point> Stats::m_active_timers;
 
 void Stats::setMaxSlices(uint64_t slice_max)
 {
@@ -38,8 +38,7 @@ void Stats::setMaxSlices(uint64_t slice_max)
 
 void Stats::begin(std::string name)
 {
-    auto timer            = sf::Clock();
-    m_active_timers[name] = timer;
+    m_active_timers[name] = std::chrono::steady_clock::now();
 }
 
 void Stats::end(std::string name)
@@ -48,7 +47,9 @@ void Stats::end(std::string name)
     if (active_timer_it == m_active_timers.end())
         return;
 
-    auto elapsed_time = m_active_timers[name].getElapsedTime().asMicroseconds();
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
+        now - active_timer_it->second).count();
 
     m_slices[name].push_back(elapsed_time);
 

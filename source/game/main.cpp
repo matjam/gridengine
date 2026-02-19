@@ -48,7 +48,7 @@ int main()
 
     auto engine = std::make_unique<gr::Game>();
     auto screen = std::make_unique<gr::GameScreen>();
-    engine->create(sf::VideoMode(sf::Vector2u{800, 600}), std::move(screen),
+    engine->create(800, 600, std::move(screen),
                    "data/unscii-8.pcf", 8, 8, "GridEngine");
     engine->start();
 
