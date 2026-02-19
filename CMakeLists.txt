@@ -1,23 +1,35 @@
 # CMakeLists.txt
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 
 # ########### VCPKG CONFIGURATION
+# Prefer VCPKG_ROOT env var, fall back to platform-specific defaults
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    if(DEFINED ENV{VCPKG_ROOT})
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+    elseif(WIN32)
+        set(CMAKE_TOOLCHAIN_FILE "C:/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake")
+    elseif(APPLE)
+        set(CMAKE_TOOLCHAIN_FILE "/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake")
+    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+        set(CMAKE_TOOLCHAIN_FILE "/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake")
+    else()
+        message(FATAL_ERROR "Unsupported platform. Set VCPKG_ROOT or CMAKE_TOOLCHAIN_FILE.")
+    endif()
+endif()
+
 if(WIN32)
     message("************************************")
     message("Building for Windows ... you mad man")
     message("************************************")
-    set(CMAKE_TOOLCHAIN_FILE "C:/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake")
 elseif(APPLE)
     message("************************************")
     message("building for MacOS ... cool")
     message("************************************")
-    set(CMAKE_TOOLCHAIN_FILE "/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake")
     set(MAKE_INSTALL_NAME_DIR @rpath)
 elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
     message("************************************")
     message("building for Linux ... fanboi")
     message("************************************")
-    set(CMAKE_TOOLCHAIN_FILE "/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake")
 else()
     message(FATAL_ERROR "Unsupported platform.")
 endif()
@@ -51,8 +63,6 @@ add_definitions(-DSPDLOG_FMT_EXTERNAL)
 
 file(GLOB gridengine_sources source/game/*.cpp source/engine/*.cpp)
 
-include_directories(external/sol2/single/include)
-
 # find all packages
 include(FindLua)
 find_package(spdlog CONFIG REQUIRED)
@@ -60,7 +70,7 @@ find_package(fmt CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(Lua REQUIRED)
 find_package(Freetype REQUIRED)
-find_package(SFML CONFIG REQUIRED COMPONENTS window system audio graphics)
+find_package(SFML COMPONENTS Window System Audio Graphics CONFIG REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 
 # Find OS X libraries
@@ -88,16 +98,15 @@ target_include_directories(gridengine PRIVATE external/SelbaWard/src)
 target_include_directories(gridengine PRIVATE ${FREETYPE_INCLUDE_DIRS})
 
 target_link_libraries(gridengine PRIVATE ${FREETYPE_LIBRARIES})
-target_link_libraries(gridengine PRIVATE sfml-window sfml-system sfml-graphics sfml-audio)
+target_link_libraries(gridengine PRIVATE SFML::Window SFML::System SFML::Graphics SFML::Audio)
 target_link_libraries(gridengine PRIVATE spdlog::spdlog)
 target_link_libraries(gridengine PRIVATE fmt::fmt)
 target_link_libraries(gridengine PRIVATE Boost::filesystem)
-target_link_libraries(gridengine PRIVATE FLAC OpenAL OpenGL)
 target_link_libraries(gridengine PRIVATE ${LUA_LIBRARIES})
-target_link_libraries(gridengine PRIVATE sol2)
+target_link_libraries(gridengine PRIVATE sol2::sol2)
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
-    target_link_libraries(gridengine PRIVATE X11 dl UDev GL)
+    target_link_libraries(gridengine PRIVATE dl)
 endif()
 
 if(APPLE)

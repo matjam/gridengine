@@ -34,35 +34,16 @@ void State::SetName(const std::string &name)
 }
 
 // runs each handler in the order in which it was added.
-void State::ProcessEvent(sf::Event &event)
+void State::ProcessEvent(const sf::Event &event)
 {
-    auto type = static_cast<int>(event.type);
-    if (event_handlers_.count(type) == 0)
-        return; // no registered handler for that event.
-
-    for (auto &handler : *event_handlers_[type]) {
-        handler(event);
-    }
-}
-
-// add an event handler like so:
-//
-// add_event_handler(sf::Event::MouseButtonPressed, [](const sf::Event &event) {
-//     spdlog::info("mouse button pressed!");
-// });
-
-// add a given event handler to the event handler map.
-void State::AddHandler(sf::Event::EventType event_type, const event_handler_func &func)
-{
-    auto type = static_cast<int>(event_type);
-    if (event_handlers_.count(type) == 0) {
-        auto d = std::make_unique<std::deque<event_handler_func>>();
-        d->push_back(func);
-        event_handlers_[type] = std::move(d);
-        return;
-    }
-
-    event_handlers_[type]->push_back(func);
+    event.visit([this, &event](const auto &e) {
+        auto key = std::type_index(typeid(e));
+        if (auto it = event_handlers_.find(key); it != event_handlers_.end()) {
+            for (auto &handler : *it->second) {
+                handler(event);
+            }
+        }
+    });
 }
 
 } // namespace ge

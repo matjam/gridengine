@@ -61,28 +61,34 @@ void Engine::create()
 }
 
 void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScreen> console_screen,
+                    const std::string &font_file, uint32_t font_width, uint32_t font_height,
                     const std::string &title)
 {
     SPDLOG_INFO("creating engine");
 
-    m_video_mode = video_mode;
+    m_video_mode  = video_mode;
+    m_font_width  = font_width;
+    m_font_height = font_height;
 
     sf::ContextSettings settings;
-    settings.antialiasingLevel = 0;
-    settings.depthBits         = 24;
+    settings.depthBits = 24;
 
     m_window =
-        std::make_unique<sf::RenderWindow>(m_video_mode, title, sf::Style::Titlebar | sf::Style::Close, settings);
+        std::make_unique<sf::RenderWindow>(m_video_mode, title, sf::Style::Titlebar | sf::Style::Close, sf::State::Windowed, settings);
     m_window->setVerticalSyncEnabled(true);
 
-    // set up our ConsoleScreen
-    m_screen = std::move(console_screen);
+    // compute grid dimensions from window size — only whole cells
+    m_screen_width  = m_video_mode.size.x / m_font_width;
+    m_screen_height = m_video_mode.size.y / m_font_height;
 
-    // all the information related to the screen
-    m_screen_width  = m_screen->size().x;
-    m_screen_height = m_screen->size().y;
-    m_font_width    = m_screen->characterSize().x;
-    m_font_height   = m_screen->characterSize().y;
+    SPDLOG_INFO("grid size: {}x{} cells (font {}x{}, window {}x{})",
+                m_screen_width, m_screen_height, m_font_width, m_font_height,
+                m_video_mode.size.x, m_video_mode.size.y);
+
+    // create the console screen with the computed dimensions
+    m_screen = std::move(console_screen);
+    m_screen->create(m_screen_width, m_screen_height, font_file, font_width, font_height);
+
     m_script_engine = std::make_unique<ScriptEngine>();
     m_state_stack   = std::make_unique<StateStack>();
     m_state         = std::make_shared<State>();
@@ -92,12 +98,17 @@ void Engine::create(const sf::VideoMode &video_mode, std::unique_ptr<ConsoleScre
     addDefaultHandlers();
     m_state_stack->Push(m_state);
 
-    // ensure our view is setup correctly
-    sf::View view = m_window->getDefaultView();
-    view.zoom(1.0 / (m_video_mode.height / (m_font_height * m_screen_height)));
-    view.setCenter((m_screen_width * m_font_width) / 2, (m_screen_height * m_font_height) / 2);
+    // set up a 1:1 pixel view and center the grid
+    uint32_t grid_pixel_w = m_screen_width * m_font_width;
+    uint32_t grid_pixel_h = m_screen_height * m_font_height;
+    float offset_x = static_cast<float>(m_video_mode.size.x - grid_pixel_w) / 2.0f;
+    float offset_y = static_cast<float>(m_video_mode.size.y - grid_pixel_h) / 2.0f;
+
+    sf::View view(sf::FloatRect({0.f, 0.f},
+                  {static_cast<float>(m_video_mode.size.x), static_cast<float>(m_video_mode.size.y)}));
     m_window->setView(view);
-    m_screen->setPosition(sf::Vector2f(0.0, 0.0));
+    m_screen->setPosition(sf::Vector2f{offset_x, offset_y});
+
     m_screen->setBackGround(0);
     m_screen->setForeground(1);
     m_screen->clear();
@@ -113,10 +124,9 @@ void Engine::start()
     Stats::begin("frame_time");
 
     while (m_window->isOpen()) {
-        sf::Event event;
         Stats::begin("process_event");
-        while (m_window->pollEvent(event)) {
-            m_state_stack->ProcessEvent(event);
+        while (const auto event = m_window->pollEvent()) {
+            m_state_stack->ProcessEvent(*event);
         }
         Stats::end("process_event");
 
@@ -157,11 +167,12 @@ void Engine::renderDebugScreen()
     }
 
     if (m_fps_overlay) {
-        m_screen->rectangle(sf::IntRect(1, 39, 22, 5), 32, 1);
-        m_screen->write(sf::Vector2i(2, 40), fmt::format("{} fps", 1000000 / Stats::getAverageTime("frame_time")));
-        m_screen->write(sf::Vector2i(2, 41),
+        int oy = static_cast<int>(m_screen_height) - 6;
+        m_screen->rectangle(sf::IntRect(sf::Vector2i{1, oy}, sf::Vector2i{22, 5}), 32, 1);
+        m_screen->write(sf::Vector2i(2, oy + 1), fmt::format("{} fps", 1000000 / Stats::getAverageTime("frame_time")));
+        m_screen->write(sf::Vector2i(2, oy + 2),
                         fmt::format("render time {} ms", Stats::getAverageTime("render_time") / 1000));
-        m_screen->write(sf::Vector2i(2, 42),
+        m_screen->write(sf::Vector2i(2, oy + 3),
                         fmt::format("update time {} ms", Stats::getAverageTime("update_time") / 1000));
     }
 }
@@ -199,28 +210,29 @@ void Engine::update()
 
 void Engine::addDefaultHandlers()
 {
-    m_state->AddHandler(sf::Event::Closed, [&](const sf::Event &) {
+    m_state->AddHandler<sf::Event::Closed>([&](const sf::Event::Closed &) {
         SPDLOG_INFO("window closed");
         m_window->close();
     });
 
-    m_state->AddHandler(sf::Event::Resized, [&](const sf::Event &event) {
-        sf::FloatRect visibleArea(0.f, 0.f, event.size.width, event.size.height);
+    m_state->AddHandler<sf::Event::Resized>([&](const sf::Event::Resized &resized) {
+        sf::FloatRect visibleArea(sf::Vector2f{0.f, 0.f},
+                                  sf::Vector2f{static_cast<float>(resized.size.x), static_cast<float>(resized.size.y)});
         m_window->setView(sf::View(visibleArea));
     });
 
-    m_state->AddHandler(sf::Event::KeyPressed, [&](const sf::Event &event) {
-        keyEventHandler(event);
+    m_state->AddHandler<sf::Event::KeyPressed>([&](const sf::Event::KeyPressed &keyPress) {
+        keyEventHandler(keyPress);
     });
 }
 
-void Engine::keyEventHandler(const sf::Event &event)
+void Engine::keyEventHandler(const sf::Event::KeyPressed &keyPress)
 {
-    if (event.key.code == sf::Keyboard::PageDown && m_debug_screen == DebugScreen::CHAR_DUMP) {
+    if (keyPress.code == sf::Keyboard::Key::PageDown && m_debug_screen == DebugScreen::CHAR_DUMP) {
         m_dump_start += 272;
     }
 
-    if (event.key.code == sf::Keyboard::PageUp && m_debug_screen == DebugScreen::CHAR_DUMP) {
+    if (keyPress.code == sf::Keyboard::Key::PageUp && m_debug_screen == DebugScreen::CHAR_DUMP) {
         if (m_dump_start > 304) {
             m_dump_start -= 272;
         } else {
@@ -232,12 +244,12 @@ void Engine::keyEventHandler(const sf::Event &event)
         }
     }
 
-    if (event.key.code == sf::Keyboard::F1) {
+    if (keyPress.code == sf::Keyboard::Key::F1) {
         m_fps_overlay = !m_fps_overlay;
         m_screen->clear();
     }
 
-    if (event.key.code == sf::Keyboard::F2) {
+    if (keyPress.code == sf::Keyboard::Key::F2) {
         if (m_debug_screen == DebugScreen::CHAR_DUMP) {
             m_debug_screen = DebugScreen::NONE;
             m_screen->clear();
@@ -247,7 +259,7 @@ void Engine::keyEventHandler(const sf::Event &event)
         }
     }
 
-    if (event.key.code == sf::Keyboard::F3) {
+    if (keyPress.code == sf::Keyboard::Key::F3) {
         if (m_debug_screen == DebugScreen::CRASH) {
             m_debug_screen = DebugScreen::NONE;
             m_screen->clear();
@@ -256,7 +268,7 @@ void Engine::keyEventHandler(const sf::Event &event)
         }
     }
 
-    if (event.key.code == sf::Keyboard::F4) {
+    if (keyPress.code == sf::Keyboard::Key::F4) {
         if (m_debug_screen == DebugScreen::LOADING) {
             m_debug_screen = DebugScreen::NONE;
             m_screen->clear();

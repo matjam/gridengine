@@ -38,7 +38,7 @@ class StateStack
   public:
     StateStack();
 
-    void ProcessEvent(sf::Event &);
+    void ProcessEvent(const sf::Event &);
 
     void Push(const std::shared_ptr<State> &);
 

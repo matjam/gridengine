@@ -26,12 +26,13 @@
 
 #include <bitset>
 #include <memory>
+#include <random>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include <SFML/Graphics.hpp>
-#include <boost/compute/detail/lru_cache.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_BITMAP_H
@@ -112,23 +113,20 @@ class ConsoleScreen : public Drawable
     const void loading();
 
   private:
-    struct Quad {
-        sf::Vertex &a;
-        sf::Vertex &b;
-        sf::Vertex &c;
-        sf::Vertex &d;
-    };
+    // 6 vertices per cell: two triangles to form a quad
+    static constexpr int VERTS_PER_CELL = 6;
 
     void loadFont(std::string font_file, uint32_t pixel_size);
 
     // implements sf::Drawable::draw()
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
-    struct Quad getQuadForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &);
+    void setCellPositions(std::vector<sf::Vertex> &vertices, const sf::Vector2i &location,
+                          float left, float top, float width, float height);
 
-    void setQuadColorForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Color &);
+    void setCellColor(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Color &);
 
-    void setTexCoordsForScreenLocation(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Vector2f &);
+    void setCellTexCoords(std::vector<sf::Vertex> &, const sf::Vector2i &, const sf::Vector2f &);
 
     // sets a glyph in the texture atlas to a given sf:image; growing it if required.
     // returns the glyph index in the texture
@@ -160,7 +158,8 @@ class ConsoleScreen : public Drawable
     sf::VertexBuffer m_console_bg_vertex_buffer;         // a vertex buffer for the background shapes
     sf::VertexBuffer m_console_fg_vertex_buffer;         // a vertex buffer to render the glyphs with
     sf::Texture m_console_atlas;                         // all of the glyphs we use in an atlas
-    std::map<char32_t, uint32_t> m_console_atlas_offset; // a map of the charcode to a given atlas offset.
+    std::unordered_map<char32_t, uint32_t> m_console_atlas_offset; // a map of the charcode to a given atlas offset.
+    std::mt19937 m_rng{std::random_device{}()};                   // fast PRNG for visual effects
 };
 
 } // namespace ge

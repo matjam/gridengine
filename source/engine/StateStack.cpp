@@ -46,7 +46,7 @@ void StateStack::Push(const std::shared_ptr<State> &state)
     state_stack.pop();
 }
 
-void StateStack::ProcessEvent(sf::Event &event)
+void StateStack::ProcessEvent(const sf::Event &event)
 {
     state_stack.top()->ProcessEvent(event);
 }

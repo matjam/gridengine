@@ -25,10 +25,11 @@
 #pragma once
 
 #include <deque>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
-#include <utility>
+#include <typeindex>
 
 #include <spdlog/spdlog.h>
 #include <SFML/Window.hpp>
@@ -36,20 +37,37 @@
 namespace ge
 {
 
-typedef std::function<void(const sf::Event &)> event_handler_func;
+using event_handler_func = std::function<void(const sf::Event &)>;
 
 class State
 {
   public:
     void SetName(const std::string &);
 
-    void ProcessEvent(sf::Event &);
+    void ProcessEvent(const sf::Event &);
 
-    void AddHandler(sf::Event::EventType, const event_handler_func &);
+    template <typename EventType>
+    void AddHandler(std::function<void(const EventType &)> func)
+    {
+        auto key     = std::type_index(typeid(EventType));
+        auto wrapper = [f = std::move(func)](const sf::Event &event) {
+            if (const auto *e = event.getIf<EventType>())
+                f(*e);
+        };
+
+        if (event_handlers_.count(key) == 0) {
+            auto d = std::make_unique<std::deque<event_handler_func>>();
+            d->push_back(wrapper);
+            event_handlers_[key] = std::move(d);
+            return;
+        }
+
+        event_handlers_[key]->push_back(wrapper);
+    }
 
   private:
     std::string name_;
-    std::map<int, std::unique_ptr<std::deque<event_handler_func>>> event_handlers_;
+    std::map<std::type_index, std::unique_ptr<std::deque<event_handler_func>>> event_handlers_;
 };
 
 } // namespace ge

@@ -53,7 +53,9 @@ class Engine
     virtual ~Engine() = default;
 
     virtual void create();
-    virtual void create(const sf::VideoMode &, std::unique_ptr<ConsoleScreen>, const std::string &);
+    virtual void create(const sf::VideoMode &, std::unique_ptr<ConsoleScreen>,
+                        const std::string &font_file, uint32_t font_width, uint32_t font_height,
+                        const std::string &title);
     virtual void start();
 
     StateStack &stateStack();
@@ -68,13 +70,13 @@ class Engine
   private:
     void addDefaultHandlers();
     void renderDebugScreen();
-    void keyEventHandler(const sf::Event &);
+    void keyEventHandler(const sf::Event::KeyPressed &);
 
     char32_t m_dump_start      = 32;
     DebugScreen m_debug_screen = DebugScreen::NONE;
     bool m_fps_overlay         = false;
 
-    sf::VideoMode m_video_mode = {1920, 1080};
+    sf::VideoMode m_video_mode{sf::Vector2u{1920, 1080}};
     uint32_t m_screen_width    = 80;
     uint32_t m_screen_height   = 45;
     uint32_t m_font_width      = 8;

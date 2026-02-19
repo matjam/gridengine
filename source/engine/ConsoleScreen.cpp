@@ -24,7 +24,6 @@
 
 #include <codecvt>
 #include <locale>
-#include <random>
 #include <sstream>
 #include <string>
 
@@ -49,19 +48,19 @@ const void ConsoleScreen::create(uint32_t width, uint32_t height, std::string fo
     m_character_height = font_height;
     m_character_width  = font_width;
 
-    m_console_bg_vertex_buffer = sf::VertexBuffer(sf::Quads, sf::VertexBuffer::Usage::Stream);
-    m_console_fg_vertex_buffer = sf::VertexBuffer(sf::Quads, sf::VertexBuffer::Usage::Stream);
+    m_console_bg_vertex_buffer = sf::VertexBuffer(sf::PrimitiveType::Triangles, sf::VertexBuffer::Usage::Stream);
+    m_console_fg_vertex_buffer = sf::VertexBuffer(sf::PrimitiveType::Triangles, sf::VertexBuffer::Usage::Stream);
 
     m_console_dirty.resize(m_width * m_height, true);
     m_console_bg.resize(m_width * m_height, 0);
     m_console_fg.resize(m_width * m_height, 2);
     m_console.resize(m_width * m_height, 32);
 
-    m_console_bg_vertices.resize(m_width * m_height * 4, sf::Vertex());
-    m_console_fg_vertices.resize(m_width * m_height * 4, sf::Vertex());
+    m_console_bg_vertices.resize(m_width * m_height * VERTS_PER_CELL, sf::Vertex());
+    m_console_fg_vertices.resize(m_width * m_height * VERTS_PER_CELL, sf::Vertex());
 
-    m_console_bg_vertex_buffer.create(m_width * m_height * 4);
-    m_console_fg_vertex_buffer.create(m_width * m_height * 4);
+    (void)m_console_bg_vertex_buffer.create(m_width * m_height * VERTS_PER_CELL);
+    (void)m_console_fg_vertex_buffer.create(m_width * m_height * VERTS_PER_CELL);
 
     // some default C64 palette colors.
     m_palette_colors = {sf::Color::Black,
@@ -90,19 +89,8 @@ const void ConsoleScreen::create(uint32_t width, uint32_t height, std::string fo
             float v_width  = static_cast<float>(m_character_width);
             float v_height = static_cast<float>(m_character_height);
 
-            auto q = getQuadForScreenLocation(m_console_bg_vertices, sf::Vector2i(x, y));
-
-            q.a = sf::Vector2f(v_left, v_top);
-            q.b = sf::Vector2f(v_left + v_width, v_top);
-            q.c = sf::Vector2f(v_left + v_width, v_top + v_height);
-            q.d = sf::Vector2f(v_left, v_top + v_height);
-
-            auto r = getQuadForScreenLocation(m_console_fg_vertices, sf::Vector2i(x, y));
-
-            r.a = sf::Vector2f(v_left, v_top);
-            r.b = sf::Vector2f(v_left + v_width, v_top);
-            r.c = sf::Vector2f(v_left + v_width, v_top + v_height);
-            r.d = sf::Vector2f(v_left, v_top + v_height);
+            setCellPositions(m_console_bg_vertices, sf::Vector2i(x, y), v_left, v_top, v_width, v_height);
+            setCellPositions(m_console_fg_vertices, sf::Vector2i(x, y), v_left, v_top, v_width, v_height);
         }
     }
 }
@@ -117,33 +105,54 @@ const sf::Vector2i ConsoleScreen::size()
     return sf::Vector2i(m_width, m_height);
 }
 
-inline struct ConsoleScreen::Quad ConsoleScreen::getQuadForScreenLocation(std::vector<sf::Vertex> &vertices,
-                                                                          const sf::Vector2i &location)
+inline void ConsoleScreen::setCellPositions(std::vector<sf::Vertex> &vertices, const sf::Vector2i &location,
+                                            float left, float top, float width, float height)
 {
-    auto offset = (location.x + location.y * m_width) * 4;
+    auto offset = (location.x + location.y * m_width) * VERTS_PER_CELL;
 
-    return ConsoleScreen::Quad{vertices[offset], vertices[offset + 1], vertices[offset + 2], vertices[offset + 3]};
+    sf::Vector2f tl(left, top);
+    sf::Vector2f tr(left + width, top);
+    sf::Vector2f br(left + width, top + height);
+    sf::Vector2f bl(left, top + height);
+
+    // Triangle 1: top-left, top-right, bottom-right
+    vertices[offset + 0].position = tl;
+    vertices[offset + 1].position = tr;
+    vertices[offset + 2].position = br;
+    // Triangle 2: top-left, bottom-right, bottom-left
+    vertices[offset + 3].position = tl;
+    vertices[offset + 4].position = br;
+    vertices[offset + 5].position = bl;
 }
 
-inline void ConsoleScreen::setQuadColorForScreenLocation(std::vector<sf::Vertex> &vertices,
-                                                         const sf::Vector2i &location, const sf::Color &color)
+inline void ConsoleScreen::setCellColor(std::vector<sf::Vertex> &vertices,
+                                        const sf::Vector2i &location, const sf::Color &color)
 {
-    auto q = getQuadForScreenLocation(vertices, location);
+    auto offset = (location.x + location.y * m_width) * VERTS_PER_CELL;
 
-    q.a.color = color;
-    q.b.color = color;
-    q.c.color = color;
-    q.d.color = color;
+    for (int i = 0; i < VERTS_PER_CELL; i++) {
+        vertices[offset + i].color = color;
+    }
 }
 
-inline void ConsoleScreen::setTexCoordsForScreenLocation(std::vector<sf::Vertex> &vertices,
-                                                         const sf::Vector2i &location, const sf::Vector2f &texCoords)
+inline void ConsoleScreen::setCellTexCoords(std::vector<sf::Vertex> &vertices,
+                                            const sf::Vector2i &location, const sf::Vector2f &texCoords)
 {
-    auto q        = getQuadForScreenLocation(vertices, location);
-    q.a.texCoords = texCoords;
-    q.b.texCoords = sf::Vector2f(texCoords.x + m_character_width, texCoords.y);
-    q.c.texCoords = sf::Vector2f(texCoords.x + m_character_width, texCoords.y + m_character_height);
-    q.d.texCoords = sf::Vector2f(texCoords.x, texCoords.y + m_character_height);
+    auto offset = (location.x + location.y * m_width) * VERTS_PER_CELL;
+
+    sf::Vector2f tl_tex = texCoords;
+    sf::Vector2f tr_tex(texCoords.x + m_character_width, texCoords.y);
+    sf::Vector2f br_tex(texCoords.x + m_character_width, texCoords.y + m_character_height);
+    sf::Vector2f bl_tex(texCoords.x, texCoords.y + m_character_height);
+
+    // Triangle 1
+    vertices[offset + 0].texCoords = tl_tex;
+    vertices[offset + 1].texCoords = tr_tex;
+    vertices[offset + 2].texCoords = br_tex;
+    // Triangle 2
+    vertices[offset + 3].texCoords = tl_tex;
+    vertices[offset + 4].texCoords = br_tex;
+    vertices[offset + 5].texCoords = bl_tex;
 }
 
 // a vector of sf::Colors to be used as the palette
@@ -185,7 +194,7 @@ const void ConsoleScreen::write(const sf::Vector2i location, const std::string t
 
 const void ConsoleScreen::clear()
 {
-    rectangle(sf::IntRect(0, 0, m_width, m_height), 32, 1);
+    rectangle(sf::IntRect(sf::Vector2i{0, 0}, sf::Vector2i{static_cast<int>(m_width), static_cast<int>(m_height)}), 32, 1);
 }
 
 const void ConsoleScreen::write(const sf::Vector2i location, const std::string text, const uint32_t max_width,
@@ -212,15 +221,15 @@ const void ConsoleScreen::write(const uint32_t x, uint32_t y, const std::string 
 
 const void ConsoleScreen::writeCenter(const sf::IntRect bounds, const std::string text)
 {
-    auto offset = (bounds.width - text.length()) / 2;
-    write(sf::Vector2i(bounds.left + offset, bounds.top), text, static_cast<uint32_t>(bounds.width));
+    auto offset = (bounds.size.x - static_cast<int>(text.length())) / 2;
+    write(sf::Vector2i(bounds.position.x + offset, bounds.position.y), text, static_cast<uint32_t>(bounds.size.x));
 }
 
 // single character access at a location
 inline void ConsoleScreen::poke(const sf::Vector2i location, const char32_t character, const uint32_t fg,
                                 const uint32_t bg)
 {
-    if (location.x > m_width || location.y > m_height)
+    if (location.x > static_cast<int>(m_width) || location.y > static_cast<int>(m_height))
         return;
 
     const auto offset       = location.x + location.y * m_width;
@@ -245,44 +254,45 @@ inline const std::tuple<const char32_t, const uint32_t, const uint32_t> ConsoleS
 // will draw a box and optionally fill it with a given character using the current bg and fg colors.
 const void ConsoleScreen::rectangle(const sf::IntRect bounds, const char32_t character, const bool filled)
 {
-    if (bounds.width == 0 || bounds.height == 0) {
+    if (bounds.size.x == 0 || bounds.size.y == 0) {
         SPDLOG_WARN("given bounds ({},{} {}x{}) that would draw nothing",
-                    bounds.left,
-                    bounds.top,
-                    bounds.width,
-                    bounds.height);
+                    bounds.position.x,
+                    bounds.position.y,
+                    bounds.size.x,
+                    bounds.size.y);
         return;
     }
 
-    if (bounds.left + bounds.width > m_width || bounds.top + bounds.height > m_height) {
+    if (bounds.position.x + bounds.size.x > static_cast<int>(m_width) ||
+        bounds.position.y + bounds.size.y > static_cast<int>(m_height)) {
         SPDLOG_WARN("given bounds ({},{} {}x{}) that would draw outside of console",
-                    bounds.left,
-                    bounds.top,
-                    bounds.width,
-                    bounds.height);
+                    bounds.position.x,
+                    bounds.position.y,
+                    bounds.size.x,
+                    bounds.size.y);
         return;
     }
 
     if (filled) {
-        for (uint32_t y = bounds.top; y < bounds.top + bounds.height; y++) {
-            for (uint32_t x = bounds.left; x < bounds.left + bounds.width; x++) {
-                if (filled || x == bounds.left || x == bounds.left + bounds.width - 1 || y == bounds.top ||
-                    y == bounds.top + bounds.height - 1) {
+        for (int y = bounds.position.y; y < bounds.position.y + bounds.size.y; y++) {
+            for (int x = bounds.position.x; x < bounds.position.x + bounds.size.x; x++) {
+                if (filled || x == bounds.position.x || x == bounds.position.x + bounds.size.x - 1 ||
+                    y == bounds.position.y || y == bounds.position.y + bounds.size.y - 1) {
                     poke(sf::Vector2i(x, y), character, m_current_fg, m_current_bg);
                 }
             }
         }
     } else {
         // don't bother scanning the x range for unfilled rectangles.
-        for (uint32_t x = bounds.left; x < bounds.left + bounds.width; x++) {
-            poke(sf::Vector2i(x, bounds.top), character, m_current_fg, m_current_bg);
-            poke(sf::Vector2i(x, bounds.top + bounds.height - 1), character, m_current_fg, m_current_bg);
+        for (int x = bounds.position.x; x < bounds.position.x + bounds.size.x; x++) {
+            poke(sf::Vector2i(x, bounds.position.y), character, m_current_fg, m_current_bg);
+            poke(sf::Vector2i(x, bounds.position.y + bounds.size.y - 1), character, m_current_fg, m_current_bg);
         }
         // skip the top and bottom row. For a height of 1, this means that nothing will
         // be drawn in this loop.
-        for (uint32_t y = bounds.top + 1; y < bounds.top + bounds.height - 1; y++) {
-            poke(sf::Vector2i(bounds.left, y), character, m_current_fg, m_current_bg);
-            poke(sf::Vector2i(bounds.left + bounds.width - 1, y), character, m_current_fg, m_current_bg);
+        for (int y = bounds.position.y + 1; y < bounds.position.y + bounds.size.y - 1; y++) {
+            poke(sf::Vector2i(bounds.position.x, y), character, m_current_fg, m_current_bg);
+            poke(sf::Vector2i(bounds.position.x + bounds.size.x - 1, y), character, m_current_fg, m_current_bg);
         }
     }
 }
@@ -311,21 +321,21 @@ std::string wrap(const std::string text, size_t line_length = 72)
 
 const void ConsoleScreen::writeRectangle(const sf::IntRect bounds, const std::string text)
 {
-    uint32_t x = bounds.left;
-    uint32_t y = bounds.top;
+    int x = bounds.position.x;
+    int y = bounds.position.y;
 
-    auto wrapped = wrap(text, bounds.width);
+    auto wrapped = wrap(text, bounds.size.x);
     auto it      = wrapped.begin();
 
     while (it != wrapped.end()) {
         if (*it == '\n') {
-            x = bounds.left;
+            x = bounds.position.x;
             y++;
             it++;
             continue;
         }
 
-        if (y > bounds.top + bounds.height - 1)
+        if (y > bounds.position.y + bounds.size.y - 1)
             return;
 
         poke(sf::Vector2i(x, y), *it, m_current_fg, m_current_bg);
@@ -368,79 +378,90 @@ inline bool glyphBit(const FT_GlyphSlot &glyph, const int x, const int y)
 // These images are then rendered directly to the texture backing the m_console_sprite.
 const void ConsoleScreen::update()
 {
-    sf::Clock timer;
     std::vector<uint8_t> bitmap;
+    bool any_dirty = false;
 
-    for (uint32_t y = 0; y < m_height; y++) {
-        for (uint32_t x = 0; x < m_width; x++) {
+    const uint32_t total = m_width * m_height;
+    const float char_w   = static_cast<float>(m_character_width);
+    const float char_h   = static_cast<float>(m_character_height);
 
-            uint32_t atlas_offset = 0;
+    for (uint32_t cell = 0; cell < total; cell++) {
+        if (!m_console_dirty[cell])
+            continue;
 
-            auto &[character, fg, bg] = peek(sf::Vector2i(x, y));
-            auto fg_color             = m_palette_colors[fg];
-            auto bg_color             = m_palette_colors[bg];
+        any_dirty = true;
 
-            auto atlas_offset_it = m_console_atlas_offset.find(character);
+        const char32_t character = m_console[cell];
+        const auto fg_color      = m_palette_colors[m_console_fg[cell]];
+        const auto bg_color      = m_palette_colors[m_console_bg[cell]];
 
-            if (atlas_offset_it == m_console_atlas_offset.end()) {
-                // We need to generate a new image for this glyph and write it to the atlas.
+        uint32_t atlas_offset = 0;
+        auto atlas_offset_it  = m_console_atlas_offset.find(character);
 
-                // I think this is larger than what we need
-                bitmap.resize(m_character_width * m_character_height, 0);
+        if (atlas_offset_it == m_console_atlas_offset.end()) {
+            // We need to generate a new image for this glyph and write it to the atlas.
+            bitmap.resize(m_character_width * m_character_height, 0);
 
-                if (FT_Load_Char(m_face, character, FT_LOAD_RENDER | FT_LOAD_MONOCHROME | FT_LOAD_TARGET_MONO) !=
-                    FT_Err_Ok) {
-                    continue;
-                }
-
-                FT_GlyphSlot glyph = m_face->glyph;
-                // the glyphs coming out of FreeType are bitmap mode so each bit is a pixel.
-
-                for (size_t glyph_y = 0; glyph_y < glyph->bitmap.rows; ++glyph_y) {
-                    for (size_t glyph_x = 0; glyph_x < glyph->bitmap.width; ++glyph_x) {
-                        int imageIndex = (glyph->bitmap.width * glyph_y) + glyph_x;
-
-                        if (glyphBit(glyph, glyph_x, glyph_y)) {
-                            bitmap[imageIndex] = 255;
-                        } else {
-                            bitmap[imageIndex] = 0;
-                        }
-                    }
-                }
-
-                // we can probably do both of this in a single operation but I've had a horrible
-                // time doing that. so above, we're wasting a whole byte to represent a bit..
-
-                sf::Image glyph_image;
-                glyph_image.create(m_character_width, m_character_height, sf::Color::Transparent);
-
-                for (uint32_t offset_y = 0; offset_y < m_character_height; offset_y++) {
-                    for (uint32_t offset_x = 0; offset_x < m_character_width; offset_x++) {
-                        // if the pixel is set then write the color as white. We will apply
-                        // color to the vertex.
-                        if (bitmap[offset_x + offset_y * m_character_width] == 255) {
-                            glyph_image.setPixel(offset_x, offset_y, sf::Color::White);
-                        }
-                    }
-                }
-
-                // ok so now we have an image with the rendered glyph in white with a transparent bg.
-                atlas_offset = setAtlasGlyph(character, glyph_image);
-            } else {
-                atlas_offset = atlas_offset_it->second;
+            if (FT_Load_Char(m_face, character, FT_LOAD_RENDER | FT_LOAD_MONOCHROME | FT_LOAD_TARGET_MONO) !=
+                FT_Err_Ok) {
+                continue;
             }
-            setQuadColorForScreenLocation(m_console_bg_vertices, sf::Vector2i(x, y), bg_color);
-            setQuadColorForScreenLocation(m_console_fg_vertices, sf::Vector2i(x, y), fg_color);
-            setTexCoordsForScreenLocation(m_console_fg_vertices,
-                                          sf::Vector2i(x, y),
-                                          getAtlasCoordsForOffset(atlas_offset));
 
-            m_console_dirty[x + y * m_width] = false; // it's clean now!
+            FT_GlyphSlot glyph = m_face->glyph;
+
+            for (size_t glyph_y = 0; glyph_y < glyph->bitmap.rows; ++glyph_y) {
+                for (size_t glyph_x = 0; glyph_x < glyph->bitmap.width; ++glyph_x) {
+                    int imageIndex = (glyph->bitmap.width * glyph_y) + glyph_x;
+                    bitmap[imageIndex] = glyphBit(glyph, glyph_x, glyph_y) ? 255 : 0;
+                }
+            }
+
+            sf::Image glyph_image(sf::Vector2u{m_character_width, m_character_height}, sf::Color::Transparent);
+
+            for (uint32_t offset_y = 0; offset_y < m_character_height; offset_y++) {
+                for (uint32_t offset_x = 0; offset_x < m_character_width; offset_x++) {
+                    if (bitmap[offset_x + offset_y * m_character_width] == 255) {
+                        glyph_image.setPixel(sf::Vector2u{offset_x, offset_y}, sf::Color::White);
+                    }
+                }
+            }
+
+            atlas_offset = setAtlasGlyph(character, glyph_image);
+        } else {
+            atlas_offset = atlas_offset_it->second;
         }
+
+        // Compute vertex base offset once per cell
+        const int base = cell * VERTS_PER_CELL;
+
+        // Set background colors
+        for (int i = 0; i < VERTS_PER_CELL; i++)
+            m_console_bg_vertices[base + i].color = bg_color;
+
+        // Set foreground colors
+        for (int i = 0; i < VERTS_PER_CELL; i++)
+            m_console_fg_vertices[base + i].color = fg_color;
+
+        // Set foreground tex coords (inline atlas coord calculation)
+        const float tx = static_cast<float>((atlas_offset % m_atlas_width) * m_character_width);
+        const float ty = static_cast<float>((atlas_offset / m_atlas_width) * m_character_width);
+
+        // Triangle 1: TL, TR, BR
+        m_console_fg_vertices[base + 0].texCoords = {tx, ty};
+        m_console_fg_vertices[base + 1].texCoords = {tx + char_w, ty};
+        m_console_fg_vertices[base + 2].texCoords = {tx + char_w, ty + char_h};
+        // Triangle 2: TL, BR, BL
+        m_console_fg_vertices[base + 3].texCoords = {tx, ty};
+        m_console_fg_vertices[base + 4].texCoords = {tx + char_w, ty + char_h};
+        m_console_fg_vertices[base + 5].texCoords = {tx, ty + char_h};
+
+        m_console_dirty[cell] = false;
     }
 
-    m_console_bg_vertex_buffer.update(m_console_bg_vertices.data(), m_width * m_height * 4, 0);
-    m_console_fg_vertex_buffer.update(m_console_fg_vertices.data(), m_width * m_height * 4, 0);
+    if (any_dirty) {
+        (void)m_console_bg_vertex_buffer.update(m_console_bg_vertices.data(), total * VERTS_PER_CELL, 0);
+        (void)m_console_fg_vertex_buffer.update(m_console_fg_vertices.data(), total * VERTS_PER_CELL, 0);
+    }
 }
 
 uint32_t ConsoleScreen::setAtlasGlyph(const char32_t charcode, const sf::Image &image)
@@ -454,8 +475,9 @@ uint32_t ConsoleScreen::setAtlasGlyph(const char32_t charcode, const sf::Image &
         sf::Texture new_atlas;
 
         // grow the atlas by 128 characters high every time.
-        new_atlas.create(m_atlas_width * m_character_width, m_atlas_width * m_character_height + atlas_size.y);
-        new_atlas.update(m_console_atlas, 0, 0); // copy the current atlas over
+        (void)new_atlas.resize(sf::Vector2u{m_atlas_width * m_character_width,
+                                            m_atlas_width * m_character_height + atlas_size.y});
+        new_atlas.update(m_console_atlas, sf::Vector2u{0, 0}); // copy the current atlas over
         new_atlas.setSmooth(false);
         m_console_atlas = new_atlas; // replace with the new atlas.
 
@@ -466,7 +488,7 @@ uint32_t ConsoleScreen::setAtlasGlyph(const char32_t charcode, const sf::Image &
     uint32_t x = (m_glyph_count % m_atlas_width) * m_character_width;
     uint32_t y = (m_glyph_count / m_atlas_width) * m_character_width;
 
-    m_console_atlas.update(image, x, y);
+    m_console_atlas.update(image, sf::Vector2u{x, y});
     m_console_atlas_offset[charcode] = m_glyph_count;
     auto rv                          = m_glyph_count;
     m_glyph_count++;
@@ -514,8 +536,7 @@ void ConsoleScreen::loadFont(const std::string font_file, uint32_t pixel_size)
 
 void ConsoleScreen::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-    // every draw loop, we are shipping the buffer up; I think we could actually be smarter and only ship a buffer if it
-    // changed. but buffers can't easily be partially updated, so its all or nothing.
+    states.transform *= getTransform();
 
     target.draw(m_console_bg_vertex_buffer, states);
     states.texture = &m_console_atlas;
@@ -524,26 +545,29 @@ void ConsoleScreen::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 
 const void ConsoleScreen::crash()
 {
-    std::random_device rd;
+    const auto palette_size = static_cast<uint32_t>(m_palette_colors.size());
+    const uint32_t total    = m_width * m_height;
 
-    for (uint32_t y = 0; y < m_height; y++) {
-        for (uint32_t x = 0; x < m_width; x++) {
-            uint32_t fg_color = rd() % m_palette_colors.size();
-            uint32_t bg_color = rd() % m_palette_colors.size();
-            char32_t c        = 33 + rd() % 128;
-            poke(sf::Vector2i(x, y), c, fg_color, bg_color);
-        }
+    for (uint32_t cell = 0; cell < total; cell++) {
+        m_console[cell]    = 33 + m_rng() % 128;
+        m_console_fg[cell] = m_rng() % palette_size;
+        m_console_bg[cell] = m_rng() % palette_size;
+        m_console_dirty[cell] = true;
     }
 }
 
 const void ConsoleScreen::loading()
 {
-    std::random_device rd;
+    const auto palette_size = static_cast<uint32_t>(m_palette_colors.size());
 
     for (uint32_t y = 0; y < m_height; y++) {
-        uint32_t bg_color = rd() % m_palette_colors.size();
+        uint32_t bg_color = m_rng() % palette_size;
         for (uint32_t x = 0; x < m_width; x++) {
-            poke(sf::Vector2i(x, y), 32, 0, bg_color);
+            const uint32_t cell    = x + y * m_width;
+            m_console[cell]        = 32;
+            m_console_fg[cell]     = 0;
+            m_console_bg[cell]     = bg_color;
+            m_console_dirty[cell]  = true;
         }
     }
 }
